@@ -20,14 +20,13 @@ export function PaymentsPage() {
       const payment = await getRow('payments', row.id, '*, clients(full_name,email,phone), invoices(invoice_number,total,amount_paid,balance_due,status)');
       const invoice = payment.invoices;
       const balanceBefore = Number(invoice?.balance_due || 0) + Number(payment.amount || 0);
-      const url = await generatePaymentReceiptPdf({
+      await generatePaymentReceiptPdf({
         payment,
         invoice,
         client: payment.clients,
         balanceBefore,
       });
-      window.open(url, '_blank', 'noopener,noreferrer');
-      setToast({ type: 'success', message: 'Recibo de pago generado.' });
+      setToast({ type: 'success', message: 'Recibo de pago generado y descargado.' });
     } catch (err) {
       setToast({ type: 'error', message: err.message });
     } finally {

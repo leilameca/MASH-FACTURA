@@ -112,9 +112,10 @@ export async function generatePaymentReceiptPdf({ payment, invoice, client, bala
 
 async function persistPdfDocument({ component, path, fileName, documentRow }) {
   const blob = await pdf(component).toBlob();
+  const localUrl = downloadBlob(blob, fileName);
 
   if (!isSupabaseConfigured) {
-    return downloadBlob(blob, fileName);
+    return localUrl;
   }
 
   const { error } = await supabase.storage.from('generated-documents').upload(path, blob, {
@@ -143,6 +144,6 @@ function downloadBlob(blob, fileName) {
   document.body.appendChild(link);
   link.click();
   link.remove();
-  window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+  window.setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
   return url;
 }

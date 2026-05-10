@@ -155,7 +155,7 @@ export function FinancialDocumentModule({ type }) {
     try {
       const full = await getRow(table, row.id, '*, clients(full_name,email,phone)');
       const items = await listRows(itemTable, { filters: { [foreignKey]: row.id } });
-      const url = await generateFinancialPdf({
+      await generateFinancialPdf({
         type: isInvoice ? 'FACTURA' : 'COTIZACION',
         number: full[numberKey],
         client: full.clients,
@@ -163,8 +163,7 @@ export function FinancialDocumentModule({ type }) {
         items,
         links: { client_id: full.client_id, quote_id: isInvoice ? full.quote_id : full.id, invoice_id: isInvoice ? full.id : null },
       });
-      setToast({ type: 'success', message: 'PDF generado.' });
-      window.open(url, '_blank', 'noopener,noreferrer');
+      setToast({ type: 'success', message: 'PDF generado y descargado.' });
     } catch (err) {
       setToast({ type: 'error', message: err.message });
     } finally {

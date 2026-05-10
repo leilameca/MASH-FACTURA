@@ -18,9 +18,8 @@ export function RepairsPage() {
     setGenerating(row.id);
     try {
       const repair = await getRow('repairs', row.id, '*, clients(full_name,email,phone)');
-      const url = await generatePickupNotePdf({ repair, client: repair.clients });
-      window.open(url, '_blank', 'noopener,noreferrer');
-      setToast({ type: 'success', message: 'Albarán generado.' });
+      await generatePickupNotePdf({ repair, client: repair.clients });
+      setToast({ type: 'success', message: 'Albarán generado y descargado.' });
     } catch (err) {
       setToast({ type: 'error', message: err.message });
     } finally {

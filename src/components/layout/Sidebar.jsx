@@ -5,12 +5,12 @@ import { cn } from '../../lib/utils';
 
 export function Sidebar() {
   return (
-    <aside className="fixed inset-y-0 left-0 z-50 hidden w-60 overflow-y-auto border-r border-[#1C1C1E] bg-[#0A0A0B] lg:block">
-      <div className="flex h-20 items-center px-4">
+    <aside className="fixed inset-y-0 left-0 z-50 hidden w-60 flex-col border-r border-[#1C1C1E] bg-[#0A0A0B] lg:flex">
+      <div className="flex h-20 shrink-0 items-center px-4">
         <img alt="MASH" className="h-12 w-auto object-contain brightness-[1.05] contrast-[0.9] invert" src={logoSrc} />
       </div>
 
-      <nav className="px-2 pb-28">
+      <nav className="min-h-0 flex-1 overflow-y-auto px-2 pb-5">
         {navSections.map((section) => (
           <div key={section}>
             <p className="px-3 pb-1.5 pt-4 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#3F3F46]">
@@ -27,7 +27,7 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="absolute bottom-0 left-0 right-0 border-t border-[#1C1C1E] bg-[#0A0A0B] p-4">
+      <div className="shrink-0 border-t border-[#1C1C1E] bg-[#0A0A0B] p-4">
         <div className="mb-3 space-y-0.5">
           {accountNav.map((item) => (
             <SidebarLink key={item.label} item={item} compact />

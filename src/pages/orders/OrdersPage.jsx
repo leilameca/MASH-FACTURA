@@ -21,9 +21,8 @@ export function OrdersPage() {
     try {
       const order = await getRow('orders', row.id, '*, clients(full_name,email,phone)');
       const invoiceItems = await getOrderItems(order);
-      const url = await generateWarrantyPdf({ order, client: order.clients, items: invoiceItems });
-      window.open(url, '_blank', 'noopener,noreferrer');
-      setToast({ type: 'success', message: 'Garantía generada.' });
+      await generateWarrantyPdf({ order, client: order.clients, items: invoiceItems });
+      setToast({ type: 'success', message: 'Garantía generada y descargada.' });
     } catch (err) {
       setToast({ type: 'error', message: err.message });
     } finally {
@@ -36,9 +35,8 @@ export function OrdersPage() {
     try {
       const order = await getRow('orders', row.id, '*, clients(full_name,email,phone)');
       const invoiceItems = await getOrderItems(order);
-      const url = await generateDeliveryNotePdf({ order, client: order.clients, items: invoiceItems });
-      window.open(url, '_blank', 'noopener,noreferrer');
-      setToast({ type: 'success', message: 'Albarán de entrega generado.' });
+      await generateDeliveryNotePdf({ order, client: order.clients, items: invoiceItems });
+      setToast({ type: 'success', message: 'Albarán de entrega generado y descargado.' });
     } catch (err) {
       setToast({ type: 'error', message: err.message });
     } finally {
