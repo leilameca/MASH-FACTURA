@@ -32,12 +32,13 @@ export function LoginPage() {
       const result = await signIn(values.email, values.password);
       const authError = result?.error;
       if (authError) {
-        setError(authError.message || 'Error al iniciar sesión');
+        setError(authError.message || 'Credenciales incorrectas. Intenta de nuevo.');
         return;
       }
-      navigate(from, { replace: true });
+      const dest = !from || from === '/login' ? '/dashboard' : from;
+      window.location.href = dest;
     } catch (e) {
-      setError(e?.message || 'Error inesperado. Intenta de nuevo.');
+      setError(e?.message || 'Error de conexión. Intenta de nuevo.');
     }
   }
 
