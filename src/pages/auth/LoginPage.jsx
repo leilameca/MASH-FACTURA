@@ -1,44 +1,74 @@
 import { Eye, EyeOff, Lock, Mail, X } from 'lucide-react';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import logoSrc from '../../assets/logo.png';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useAuth } from '../../hooks/useAuth';
+import { isSupabaseConfigured, supabase } from '../../lib/supabaseClient';
 
 export function LoginPage() {
-  const { session, signIn, resetPassword, isSupabaseConfigured } = useAuth();
-  const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [forgotOpen, setForgotOpen] = useState(false);
-  const navigate = useNavigate();
+  const { session, resetPassword } = useAuth();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/dashboard';
 
-  const {
-    register,
-    handleSubmit,
-    formState: { isSubmitting },
-  } = useForm({ defaultValues: { email: 'admin@mashflow.com', password: 'MashFlow2026!' } });
+  const [email, setEmail] = useState('admin@mashflow.com');
+  const [password, setPassword] = useState('MashFlow2026!');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [status, setStatus] = useState('');
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   if (session) {
-    return <Navigate to={from} replace />;
+    const dest = !from || from === '/login' ? '/dashboard' : from;
+    return <Navigate to={dest} replace />;
   }
 
-  async function onSubmit(values) {
+  async function handleLogin(e) {
+    e.preventDefault();
+    if (!email.trim() || !password.trim()) {
+      setError('Ingresa tu email y contraseña.');
+      return;
+    }
     setError('');
+    setStatus('Autenticando...');
+    setLoading(true);
+
     try {
-      const result = await signIn(values.email, values.password);
-      const authError = result?.error;
-      if (authError) {
-        setError(authError.message || 'Credenciales incorrectas. Intenta de nuevo.');
+      if (!isSupabaseConfigured || !supabase) {
+        setError('Supabase no está configurado.');
+        setStatus('');
+        setLoading(false);
         return;
       }
+
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim(),
+      });
+
+      if (authError) {
+        setError(authError.message || 'Credenciales incorrectas.');
+        setStatus('');
+        setLoading(false);
+        return;
+      }
+
+      if (!data?.session) {
+        setError('No se recibió sesión de Supabase. Intenta de nuevo.');
+        setStatus('');
+        setLoading(false);
+        return;
+      }
+
+      setStatus('¡Bienvenido! Cargando el sistema...');
       const dest = !from || from === '/login' ? '/dashboard' : from;
       window.location.href = dest;
     } catch (e) {
-      setError(e?.message || 'Error de conexión. Intenta de nuevo.');
+      setError(e?.message || 'Error inesperado. Intenta de nuevo.');
+      setStatus('');
+      setLoading(false);
     }
   }
 
@@ -57,15 +87,24 @@ export function LoginPage() {
           <p className="mt-2 text-sm text-mash-text3">Ingresa tus credenciales para continuar</p>
         </div>
 
-        <form className="mt-7 space-y-4" onSubmit={handleSubmit(onSubmit)}>
-          <Input label="Email" prefix={Mail} type="email" {...register('email', { required: true })} />
+        <form className="mt-7 space-y-4" onSubmit={handleLogin}>
+          <Input
+            label="Email"
+            prefix={Mail}
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+          />
 
           <div className="relative">
             <Input
               label="Contraseña"
               prefix={Lock}
               type={showPassword ? 'text' : 'password'}
-              {...register('password', { required: true })}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
             />
             <button
               className="absolute bottom-0 right-0 grid h-12 w-11 place-items-center text-mash-text3 transition hover:text-mash-text1 md:h-10"
@@ -86,16 +125,14 @@ export function LoginPage() {
             </button>
           </div>
 
+          {status ? (
+            <p className="rounded-[10px] border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">{status}</p>
+          ) : null}
           {error ? (
             <p className="rounded-[10px] border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>
           ) : null}
-          {!isSupabaseConfigured ? (
-            <p className="rounded-[10px] border border-mash-border bg-mash-surface2 p-3 text-xs leading-5 text-mash-text3">
-              Supabase no está configurado. Revisa <code>.env.local</code> y reinicia el servidor.
-            </p>
-          ) : null}
 
-          <Button className="w-full" loading={isSubmitting} type="submit">
+          <Button className="w-full" loading={loading} type="submit">
             Ingresar al sistema
           </Button>
         </form>
@@ -105,7 +142,6 @@ export function LoginPage() {
 
       {forgotOpen ? (
         <ForgotPasswordModal
-          isSupabaseConfigured={isSupabaseConfigured}
           onClose={() => setForgotOpen(false)}
           resetPassword={resetPassword}
         />
@@ -114,7 +150,7 @@ export function LoginPage() {
   );
 }
 
-function ForgotPasswordModal({ onClose, resetPassword, isSupabaseConfigured }) {
+function ForgotPasswordModal({ onClose, resetPassword }) {
   const [email, setEmail] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -125,11 +161,6 @@ function ForgotPasswordModal({ onClose, resetPassword, isSupabaseConfigured }) {
     setSending(true);
     setError('');
     try {
-      if (!isSupabaseConfigured) {
-        await new Promise((r) => window.setTimeout(r, 700));
-        setSent(true);
-        return;
-      }
       const { error: resetError } = await resetPassword(email.trim());
       if (resetError) {
         setError(resetError.message);
