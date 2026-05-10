@@ -28,12 +28,17 @@ export function LoginPage() {
 
   async function onSubmit(values) {
     setError('');
-    const { error: authError } = await signIn(values.email, values.password);
-    if (authError) {
-      setError(authError.message);
-      return;
+    try {
+      const result = await signIn(values.email, values.password);
+      const authError = result?.error;
+      if (authError) {
+        setError(authError.message || 'Error al iniciar sesión');
+        return;
+      }
+      navigate(from, { replace: true });
+    } catch (e) {
+      setError(e?.message || 'Error inesperado. Intenta de nuevo.');
     }
-    navigate(from, { replace: true });
   }
 
   return (
