@@ -58,8 +58,7 @@ export function SettingsPage() {
     setSaving(true);
     try {
       if (!isSupabaseConfigured) {
-        await new Promise((r) => window.setTimeout(r, 600));
-        setToast({ type: 'success', message: 'Cambios guardados (modo demo).' });
+        setToast({ type: 'error', message: 'Supabase no está configurado. Revisa las variables de entorno.' });
         return;
       }
       const payload = {
