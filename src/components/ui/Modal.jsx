@@ -8,7 +8,7 @@ export function Modal({ open, title, children, footer, onClose, size = 'md' }) {
     <div className="fixed inset-0 z-[120] flex items-end justify-center bg-black/50 backdrop-blur-sm md:items-center md:p-4">
       <section
         className={cn(
-          'modal-sheet modal-enter flex max-h-[92vh] w-full flex-col rounded-t-3xl bg-white shadow-mashXl md:rounded-2xl',
+          'modal-sheet modal-enter flex max-h-[calc(100dvh-8px)] w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-mashXl md:max-h-[min(92dvh,900px)] md:rounded-2xl',
           size === 'sm' && 'md:max-w-md',
           size === 'md' && 'md:max-w-xl',
           size === 'lg' && 'md:max-w-3xl',
@@ -21,7 +21,7 @@ export function Modal({ open, title, children, footer, onClose, size = 'md' }) {
             <X className="h-5 w-5" />
           </button>
         </header>
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
           {children}
         </div>
         {footer ? (

@@ -35,6 +35,8 @@ export function SettingsPage() {
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     defaultValues: DEFAULT_SETTINGS,
+    mode: 'onChange',
+    reValidateMode: 'onChange',
   });
 
   useEffect(() => {

@@ -32,7 +32,11 @@ export function AccountPage() {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm({ defaultValues: DEFAULT_PROFILE });
+  } = useForm({
+    defaultValues: DEFAULT_PROFILE,
+    mode: 'onChange',
+    reValidateMode: 'onChange',
+  });
 
   useEffect(() => {
     if (!user) return;

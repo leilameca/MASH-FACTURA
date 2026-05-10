@@ -260,7 +260,10 @@ export function CrudModule({
 function DynamicFormModal({ open, title, fields, values, loading, onSubmit, onClose }) {
   const [files, setFiles] = useState({});
   const [lookups, setLookups] = useState({});
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    mode: 'onChange',
+    reValidateMode: 'onChange',
+  });
 
   useEffect(() => {
     reset(values ?? {});
