@@ -33,7 +33,8 @@ export function AuthProvider({ children }) {
       return { error: { message: 'Supabase no está configurado. Revisa .env.local y reinicia Vite.' } };
     }
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (data?.session) setSession(data.session);
     return { error };
   }
 
