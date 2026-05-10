@@ -4,7 +4,7 @@ export function DataTable({ columns, rows, renderRow }) {
   return (
     <div className="hidden overflow-x-auto rounded-2xl border border-mash-border bg-white md:block">
       <table className="w-full border-collapse">
-        <thead className="sticky top-16 bg-mash-surface2">
+        <thead className="bg-mash-surface2">
           <tr>
             {columns.map((column) => (
               <th
