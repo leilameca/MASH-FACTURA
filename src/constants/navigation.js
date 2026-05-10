@@ -29,11 +29,11 @@ export const mainNav = [
 ];
 
 export const bottomNav = [
-  { label: 'Home', path: '/dashboard', icon: LayoutDashboard },
-  { label: 'Docs', path: '/quotes', icon: FileSearch },
-  { label: 'Pedidos', path: '/orders', icon: Package, center: true },
+  { label: 'Inicio', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Clientes', path: '/clients', icon: Users },
-  { label: 'Más', path: '/settings', icon: Settings },
+  { label: 'Pedidos', path: '/orders', icon: Package, center: true },
+  { label: 'Facturas', path: '/invoices', icon: Receipt },
+  { label: 'Más', path: null, icon: Settings },
 ];
 
 export const accountNav = [

@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { Settings, X } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { bottomNav, mainNav } from '../../constants/navigation';
@@ -8,9 +8,12 @@ export function BottomNav() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const location = useLocation();
 
-  const secondaryNav = mainNav.filter(
-    (item) => !bottomNav.some((b) => b.path === item.path),
-  );
+  // Items not shown in the tab bar go to the drawer
+  const tabPaths = new Set(bottomNav.filter((b) => b.path).map((b) => b.path));
+  const secondaryNav = [
+    ...mainNav.filter((item) => !tabPaths.has(item.path)),
+    { label: 'Configuración', path: '/settings', icon: Settings },
+  ];
 
   return (
     <>
@@ -69,8 +72,7 @@ export function BottomNav() {
       >
         {bottomNav.map((item) => {
           const Icon = item.icon;
-          const isMore = item.label === 'Más';
-          if (isMore) {
+          if (!item.path) {
             return (
               <button
                 className={cn(
