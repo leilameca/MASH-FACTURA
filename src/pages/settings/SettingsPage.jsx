@@ -167,11 +167,6 @@ export function SettingsPage() {
           </div>
         </SettingsSection>
 
-        <div className="flex justify-end">
-          <Button className="w-full md:w-auto" icon={Save} loading={saving} type="submit">
-            Guardar cambios
-          </Button>
-        </div>
       </form>
     </div>
   );

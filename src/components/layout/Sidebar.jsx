@@ -1,9 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import logoSrc from '../../assets/logo.png';
-import { accountNav, mainNav } from '../../constants/navigation';
+import { accountNav, mainNav, navSections } from '../../constants/navigation';
 import { cn } from '../../lib/utils';
-
-const sections = ['Principal', 'Comercial', 'Operaciones', 'Finanzas', 'Documentos'];
 
 export function Sidebar() {
   return (
@@ -13,7 +11,7 @@ export function Sidebar() {
       </div>
 
       <nav className="px-2 pb-28">
-        {sections.map((section) => (
+        {navSections.map((section) => (
           <div key={section}>
             <p className="px-3 pb-1.5 pt-4 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#3F3F46]">
               {section}

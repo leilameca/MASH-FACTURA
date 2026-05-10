@@ -1,19 +1,12 @@
-import { Settings, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { bottomNav, mainNav } from '../../constants/navigation';
+import { accountNav, bottomNav, mainNav, navSections } from '../../constants/navigation';
 import { cn } from '../../lib/utils';
 
 export function BottomNav() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const location = useLocation();
-
-  // Items not shown in the tab bar go to the drawer
-  const tabPaths = new Set(bottomNav.filter((b) => b.path).map((b) => b.path));
-  const secondaryNav = [
-    ...mainNav.filter((item) => !tabPaths.has(item.path)),
-    { label: 'Configuración', path: '/settings', icon: Settings },
-  ];
 
   return (
     <>
@@ -28,7 +21,7 @@ export function BottomNav() {
       {/* ── More drawer ────────────────────────────────── */}
       <div
         className={cn(
-          'fixed inset-x-0 bottom-[64px] z-50 rounded-t-3xl border-t border-mash-border bg-white pb-4 shadow-xl transition-transform duration-300 lg:hidden',
+          'fixed inset-x-0 bottom-[64px] z-50 max-h-[76vh] overflow-y-auto rounded-t-3xl border-t border-mash-border bg-white pb-4 shadow-xl transition-transform duration-300 lg:hidden',
           drawerOpen ? 'translate-y-0' : 'translate-y-full',
         )}
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
@@ -43,26 +36,44 @@ export function BottomNav() {
             <X className="h-4 w-4" />
           </button>
         </div>
-        <nav className="grid grid-cols-3 gap-1 px-4">
-          {secondaryNav.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+        <div className="space-y-5 px-4">
+          {navSections.map((section) => {
+            const items = mainNav.filter((item) => item.section === section);
             return (
-              <NavLink
-                className={cn(
-                  'flex flex-col items-center gap-2 rounded-2xl p-4 text-[11px] font-semibold text-mash-text3 transition',
-                  isActive ? 'bg-mash-brand text-white' : 'hover:bg-mash-surface2',
-                )}
-                key={item.path}
-                onClick={() => setDrawerOpen(false)}
-                to={item.path}
-              >
-                <Icon className="h-5 w-5" />
-                <span className="text-center leading-tight">{item.label}</span>
-              </NavLink>
+              <section key={section}>
+                <p className="px-1 pb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-mash-text4">
+                  {section}
+                </p>
+                <nav className="grid grid-cols-3 gap-1">
+                  {items.map((item) => (
+                    <DrawerLink
+                      active={location.pathname === item.path}
+                      item={item}
+                      key={item.path}
+                      onClose={() => setDrawerOpen(false)}
+                    />
+                  ))}
+                </nav>
+              </section>
             );
           })}
-        </nav>
+
+          <section>
+            <p className="px-1 pb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-mash-text4">
+              Cuenta
+            </p>
+            <nav className="grid grid-cols-2 gap-1">
+              {accountNav.map((item) => (
+                <DrawerLink
+                  active={location.pathname === item.path}
+                  item={item}
+                  key={item.path}
+                  onClose={() => setDrawerOpen(false)}
+                />
+              ))}
+            </nav>
+          </section>
+        </div>
       </div>
 
       {/* ── Bottom tab bar ─────────────────────────────── */}
@@ -112,5 +123,22 @@ export function BottomNav() {
         })}
       </nav>
     </>
+  );
+}
+
+function DrawerLink({ item, active, onClose }) {
+  const Icon = item.icon;
+  return (
+    <NavLink
+      className={cn(
+        'flex min-h-[76px] flex-col items-center justify-center gap-2 rounded-2xl p-3 text-[11px] font-semibold text-mash-text3 transition',
+        active ? 'bg-mash-brand text-white' : 'hover:bg-mash-surface2',
+      )}
+      onClick={onClose}
+      to={item.path}
+    >
+      <Icon className="h-5 w-5" />
+      <span className="text-center leading-tight">{item.label}</span>
+    </NavLink>
   );
 }

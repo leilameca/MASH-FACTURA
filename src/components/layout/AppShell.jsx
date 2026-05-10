@@ -18,6 +18,7 @@ const routeTitles = {
   '/suppliers': 'Suplidores',
   '/documents': 'Documentos',
   '/settings': 'Configuración',
+  '/account': 'Mi cuenta',
 };
 
 function useGreeting() {

@@ -195,7 +195,6 @@ export function FinancialDocumentModule({ type }) {
 
       {!loading && !rows.length ? (
         <EmptyState
-          action={{ label: isInvoice ? 'Nueva factura' : 'Nueva cotización', icon: Plus, onClick: () => setEditing(defaultDocument(isInvoice, numberKey)) }}
           description={isInvoice ? 'Convierte una cotización aprobada en factura, o crea una directamente.' : 'Crea tu primera cotización y envíasela a un cliente.'}
           icon={FileText}
           title={isInvoice ? 'Sin facturas emitidas' : 'Sin cotizaciones'}

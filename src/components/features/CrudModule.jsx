@@ -179,7 +179,6 @@ export function CrudModule({
 
       {!loading && !rows.length ? (
         <EmptyState
-          action={{ label: actionLabel, icon: Plus, onClick: () => setEditing({}) }}
           description={emptyDescription}
           icon={emptyIcon}
           title={emptyTitle}

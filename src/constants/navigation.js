@@ -28,6 +28,8 @@ export const mainNav = [
   { label: 'Documentos', path: '/documents', icon: FileBadge, section: 'Documentos' },
 ];
 
+export const navSections = ['Principal', 'Comercial', 'Operaciones', 'Finanzas', 'Documentos'];
+
 export const bottomNav = [
   { label: 'Inicio', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Clientes', path: '/clients', icon: Users },
@@ -38,5 +40,5 @@ export const bottomNav = [
 
 export const accountNav = [
   { label: 'Configuración', path: '/settings', icon: Settings },
-  { label: 'Mi cuenta', path: '/settings', icon: UserCircle },
+  { label: 'Mi cuenta', path: '/account', icon: UserCircle },
 ];

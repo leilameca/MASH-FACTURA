@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell.jsx';
 import { ProtectedRoute } from './components/layout/ProtectedRoute.jsx';
+import { AccountPage } from './pages/account/AccountPage.jsx';
 import { LoginPage } from './pages/auth/LoginPage.jsx';
 import { ClientsPage } from './pages/clients/ClientsPage.jsx';
 import { DashboardPage } from './pages/dashboard/DashboardPage.jsx';
@@ -38,6 +39,7 @@ export const router = createBrowserRouter([
       { path: 'suppliers', element: <SuppliersPage /> },
       { path: 'documents', element: <DocumentsPage /> },
       { path: 'settings', element: <SettingsPage /> },
+      { path: 'account', element: <AccountPage /> },
     ],
   },
 ]);
