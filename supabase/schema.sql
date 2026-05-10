@@ -59,17 +59,17 @@ exception when duplicate_object then null;
 end $$;
 
 do $$ begin
-  create type public.payment_method as enum ('efectivo', 'transferencia', 'tarjeta', 'cheque', 'otro');
+  create type public.payment_method as enum ('efectivo', 'transferencia', 'tarjeta', 'qik', 'cheque', 'otro');
 exception when duplicate_object then null;
 end $$;
 
 do $$ begin
-  create type public.expense_category as enum ('materiales', 'envio', 'servicios', 'nomina', 'alquiler', 'herramientas', 'otros');
+  create type public.expense_category as enum ('materiales', 'envio', 'servicios', 'nomina', 'alquiler', 'herramientas', 'suplidores', 'transporte', 'publicidad', 'otros');
 exception when duplicate_object then null;
 end $$;
 
 do $$ begin
-  create type public.document_type as enum ('cotizacion', 'factura', 'garantia', 'albaran', 'recibo', 'orden', 'otro');
+  create type public.document_type as enum ('cotizacion', 'factura', 'garantia', 'albaran', 'albaran_entrega', 'albaran_recogida', 'recibo', 'recibo_pago', 'orden', 'otro');
 exception when duplicate_object then null;
 end $$;
 
@@ -95,25 +95,6 @@ set search_path = public
 as $$
 begin
   new.updated_at = now();
-  return new;
-end;
-$$;
-
-create or replace function public.create_profile_for_new_user()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  insert into public.profiles (id, full_name, email)
-  values (
-    new.id,
-    coalesce(new.raw_user_meta_data ->> 'full_name', new.email),
-    new.email
-  )
-  on conflict (id) do nothing;
-
   return new;
 end;
 $$;
@@ -307,7 +288,9 @@ create table if not exists public.repairs (
   order_id uuid references public.orders(id) on delete set null,
   repair_number text unique,
   pickup_date date,
+  pickup_time time,
   pickup_address text,
+  delivered_by text,
   estimated_review_days integer not null default 3 check (estimated_review_days >= 0),
   furniture_type text,
   material text,
@@ -501,11 +484,6 @@ drop trigger if exists set_business_settings_updated_at on public.business_setti
 create trigger set_business_settings_updated_at
 before update on public.business_settings
 for each row execute function public.set_updated_at();
-
-drop trigger if exists create_profile_on_signup on auth.users;
-create trigger create_profile_on_signup
-after insert on auth.users
-for each row execute function public.create_profile_for_new_user();
 
 -- ============================================================================
 -- INDEXES

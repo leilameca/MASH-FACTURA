@@ -1,6 +1,6 @@
 import { cn } from '../../lib/utils';
 
-export function Chip({ active = false, children }) {
+export function Chip({ active = false, children, ...props }) {
   return (
     <button
       className={cn(
@@ -8,6 +8,7 @@ export function Chip({ active = false, children }) {
         active ? 'bg-mash-brand text-white' : 'bg-mash-surface2 text-mash-text2 hover:bg-mash-border',
       )}
       type="button"
+      {...props}
     >
       {children}
     </button>

@@ -1,87 +1,116 @@
-import { ChevronRight, Eye, Pencil, Plus } from 'lucide-react';
-import { Badge } from '../../components/ui/Badge';
-import { Button } from '../../components/ui/Button';
+import { Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CrudModule } from '../../components/features/CrudModule';
 import { Card } from '../../components/ui/Card';
-import { Chip } from '../../components/ui/Chip';
-import { DataTable } from '../../components/ui/DataTable';
-import { PageHeader } from '../../components/ui/PageHeader';
-import { SearchBar } from '../../components/ui/SearchBar';
-import { clients } from '../../constants/mockData';
-
-const columns = [
-  { key: 'id', label: '#' },
-  { key: 'client', label: 'Cliente' },
-  { key: 'email', label: 'Email' },
-  { key: 'phone', label: 'Teléfono' },
-  { key: 'last', label: 'Última actividad' },
-  { key: 'total', label: 'Total', align: 'right' },
-  { key: 'status', label: 'Estado' },
-  { key: 'actions', label: 'Acciones', align: 'right' },
-];
+import { Badge } from '../../components/ui/Badge';
+import { listRows } from '../../services/crudService';
+import { formatCurrency, formatDate } from '../../lib/utils';
 
 export function ClientsPage() {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        actions={<Button icon={Plus}>Nuevo cliente</Button>}
-        count="48"
-        subtitle="Relaciones, historial y facturación de cada cliente."
-        title="Clientes"
-      />
+    <CrudModule
+      actionLabel="Nuevo cliente"
+      columns={[
+        { key: 'full_name', label: 'Cliente' },
+        { key: 'email', label: 'Email' },
+        { key: 'phone', label: 'Teléfono' },
+        { key: 'whatsapp', label: 'WhatsApp' },
+        { key: 'created_at', label: 'Creado', type: 'date' },
+      ]}
+      detail={(client) => <ClientDetail client={client} />}
+      emptyDescription="Agrega tu primer cliente para comenzar a gestionar tus ventas."
+      emptyIcon={Users}
+      emptyTitle="Sin clientes aún"
+      fields={[
+        { name: 'full_name', label: 'Nombre completo', required: true },
+        { name: 'phone', label: 'Teléfono' },
+        { name: 'whatsapp', label: 'WhatsApp' },
+        { name: 'email', label: 'Email', type: 'email' },
+        { name: 'address', label: 'Dirección', full: true },
+        { name: 'reference', label: 'Referencia', full: true },
+        { name: 'notes', label: 'Notas', type: 'textarea', full: true },
+      ]}
+      getSubtitle={(row) => `${row.phone || 'Sin teléfono'} · ${row.email || 'Sin email'}`}
+      getTitle={(row) => row.full_name}
+      searchColumns={['full_name', 'email', 'phone', 'whatsapp']}
+      subtitle="Relaciones, historial y facturación de cada cliente."
+      table="clients"
+      title="Clientes"
+    />
+  );
+}
 
-      <div className="space-y-3">
-        <SearchBar placeholder="Buscar por nombre, email o teléfono..." />
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0">
-          {['Todos', 'Activos', 'Con deuda', 'Sin pedidos'].map((chip, index) => (
-            <Chip active={index === 0} key={chip}>{chip}</Chip>
-          ))}
-        </div>
+function ClientDetail({ client }) {
+  const [history, setHistory] = useState({ quotes: [], invoices: [], orders: [], payments: [], documents: [] });
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    async function loadHistory() {
+      try {
+        const [quotes, invoices, orders, payments, documents] = await Promise.all([
+          listRows('quotes', { filters: { client_id: client.id }, orderBy: 'created_at' }),
+          listRows('invoices', { filters: { client_id: client.id }, orderBy: 'created_at' }),
+          listRows('orders', { filters: { client_id: client.id }, orderBy: 'created_at' }),
+          listRows('payments', { filters: { client_id: client.id }, orderBy: 'payment_date' }),
+          listRows('documents', { filters: { client_id: client.id }, orderBy: 'created_at' }),
+        ]);
+        setHistory({ quotes, invoices, orders, payments, documents });
+      } catch (err) {
+        setError(err.message);
+      }
+    }
+    loadHistory();
+  }, [client.id]);
+
+  const groups = [
+    { label: 'Cotizaciones', rows: history.quotes, number: 'quote_number', amount: 'total' },
+    { label: 'Facturas', rows: history.invoices, number: 'invoice_number', amount: 'total' },
+    { label: 'Pedidos', rows: history.orders, number: 'order_number' },
+    { label: 'Pagos', rows: history.payments, number: 'payment_method', amount: 'amount', date: 'payment_date' },
+    { label: 'Documentos', rows: history.documents, number: 'document_number' },
+  ];
+
+  return (
+    <div className="space-y-5">
+      {error ? <Card className="border-red-200 bg-red-50 text-sm text-red-900">{error}</Card> : null}
+      <div className="grid gap-3 md:grid-cols-2">
+        {[
+          ['Email', client.email],
+          ['Teléfono', client.phone],
+          ['WhatsApp', client.whatsapp],
+          ['Dirección', client.address],
+          ['Referencia', client.reference],
+          ['Notas', client.notes],
+        ].map(([label, value]) => (
+          <div className="rounded-2xl border border-mash-border bg-mash-bg p-4" key={label}>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-mash-text3">{label}</p>
+            <p className="mt-2 text-sm font-medium text-mash-text1">{value || '—'}</p>
+          </div>
+        ))}
       </div>
 
-      <div className="space-y-3 md:hidden">
-        {clients.map((client) => (
-          <Card className="p-4" clickable key={client.id}>
-            <div className="flex items-start gap-3">
-              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-mash-surface2 text-xs font-semibold text-mash-text1">
-                {client.name.slice(0, 2).toUpperCase()}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-[15px] font-semibold text-mash-text1">{client.name}</p>
-                  <Badge variant={client.status === 'Activo' ? 'olive' : 'warning'}>{client.status}</Badge>
+      <div className="grid gap-4 lg:grid-cols-2">
+        {groups.map((group) => (
+          <Card className="p-4" key={group.label}>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-mash-text1">{group.label}</h3>
+              <Badge>{group.rows.length}</Badge>
+            </div>
+            <div className="space-y-2">
+              {group.rows.slice(0, 5).map((row) => (
+                <div className="rounded-xl bg-mash-bg p-3" key={row.id}>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-mono text-xs text-mash-text2">{row[group.number] || row.id.slice(0, 8)}</p>
+                    {group.amount ? <p className="font-mono text-sm font-semibold text-mash-text1">{formatCurrency(row[group.amount])}</p> : null}
+                  </div>
+                  <p className="mt-1 text-xs text-mash-text3">{formatDate(row[group.date] || row.created_at)}</p>
                 </div>
-                <p className="mt-1 truncate text-[13px] text-mash-text3">{client.email}</p>
-                <p className="mt-3 text-xs text-mash-text3">
-                  {client.phone} · {client.last} · <span className="font-mono text-mash-text1">{client.total}</span>
-                </p>
-              </div>
-              <ChevronRight className="mt-2 h-4 w-4 text-mash-borderMd" />
+              ))}
+              {!group.rows.length ? <p className="text-sm text-mash-text3">Sin registros.</p> : null}
             </div>
           </Card>
         ))}
       </div>
-
-      <DataTable
-        columns={columns}
-        rows={clients}
-        renderRow={(client) => (
-          <tr className="border-b border-mash-surface2 transition hover:bg-mash-bg" key={client.id}>
-            <td className="px-4 py-4 font-mono text-xs text-mash-text3">{client.id}</td>
-            <td className="px-4 py-4 text-sm font-semibold text-mash-text1">{client.name}</td>
-            <td className="px-4 py-4 text-sm text-mash-text3">{client.email}</td>
-            <td className="px-4 py-4 text-sm text-mash-text3">{client.phone}</td>
-            <td className="px-4 py-4 text-sm text-mash-text3">{client.last}</td>
-            <td className="px-4 py-4 text-right font-mono text-sm text-mash-text1">{client.total}</td>
-            <td className="px-4 py-4"><Badge variant={client.status === 'Activo' ? 'olive' : 'warning'}>{client.status}</Badge></td>
-            <td className="px-4 py-4 text-right">
-              <div className="flex justify-end gap-1">
-                <button className="grid h-9 w-9 place-items-center rounded-[10px] text-mash-text3 hover:bg-mash-surface2 hover:text-mash-text1" type="button"><Eye className="h-4 w-4" /></button>
-                <button className="grid h-9 w-9 place-items-center rounded-[10px] text-mash-text3 hover:bg-mash-surface2 hover:text-mash-text1" type="button"><Pencil className="h-4 w-4" /></button>
-              </div>
-            </td>
-          </tr>
-        )}
-      />
     </div>
   );
 }

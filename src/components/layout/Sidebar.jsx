@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import logoSrc from '../../assets/logo.png';
 import { accountNav, mainNav } from '../../constants/navigation';
 import { cn } from '../../lib/utils';
 
@@ -7,12 +8,8 @@ const sections = ['Principal', 'Comercial', 'Operaciones', 'Finanzas', 'Document
 export function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-50 hidden w-60 overflow-y-auto border-r border-[#1C1C1E] bg-[#0A0A0B] lg:block">
-      <div className="flex h-16 items-center gap-2 px-4">
-        <div className="grid h-8 w-8 place-items-center rounded-[8px] bg-white text-sm font-bold text-mash-brand">M</div>
-        <div className="leading-none">
-          <p className="text-sm font-bold text-white">MASH</p>
-          <p className="mt-1 text-[13px] font-semibold text-mash-champagne">Flow</p>
-        </div>
+      <div className="flex h-20 items-center px-4">
+        <img alt="MASH" className="h-12 w-auto object-contain brightness-[1.05] contrast-[0.9] invert" src={logoSrc} />
       </div>
 
       <nav className="px-2 pb-28">

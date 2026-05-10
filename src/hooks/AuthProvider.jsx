@@ -8,12 +8,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
-      setSession({
-        user: {
-          email: 'admin@mashflow.local',
-          user_metadata: { full_name: 'MASH Admin' },
-        },
-      });
+      setSession(null);
       setLoading(false);
       return undefined;
     }
@@ -35,8 +30,7 @@ export function AuthProvider({ children }) {
 
   async function signIn(email, password) {
     if (!isSupabaseConfigured) {
-      setSession({ user: { email, user_metadata: { full_name: 'MASH Admin' } } });
-      return { error: null };
+      return { error: { message: 'Supabase no está configurado. Revisa .env.local y reinicia Vite.' } };
     }
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -50,6 +44,16 @@ export function AuthProvider({ children }) {
     setSession(null);
   }
 
+  async function resetPassword(email) {
+    if (!isSupabaseConfigured) {
+      return { error: { message: 'Supabase no está configurado.' } };
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    return { error };
+  }
+
   const value = useMemo(
     () => ({
       session,
@@ -57,6 +61,7 @@ export function AuthProvider({ children }) {
       loading,
       signIn,
       signOut,
+      resetPassword,
       isSupabaseConfigured,
     }),
     [session, loading],

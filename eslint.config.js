@@ -7,6 +7,17 @@ export default [
   { ignores: ['dist'] },
   js.configs.recommended,
   {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+      },
+      sourceType: 'module',
+    },
+  },
+  {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
       ecmaVersion: 2020,

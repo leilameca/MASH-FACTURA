@@ -7,7 +7,7 @@ export function StatCard({ label, value, delta, icon: Icon, trend = 'neutral' })
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-mash-text3">{label}</p>
-          <p className="mt-3 font-mono text-[26px] font-bold leading-none text-mash-text1">{value}</p>
+          <p className="mt-3 font-mono text-[20px] font-bold leading-none text-mash-text1 md:text-[26px]">{value}</p>
         </div>
         {Icon ? <Icon className="h-5 w-5 text-mash-text4" /> : null}
       </div>
