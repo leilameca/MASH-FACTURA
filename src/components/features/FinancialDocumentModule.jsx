@@ -337,20 +337,20 @@ function FinancialForm({ document, isInvoice, clients, products, statuses, loadi
               {products.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}
             </Select>
             <Input label="Descripción" onChange={(event) => setItem(index, { description: event.target.value })} value={item.description || ''} />
-            <Input label="Cant." onChange={(event) => setItem(index, { quantity: event.target.value })} type="number" value={item.quantity || 1} />
-            <Input label="Precio" onChange={(event) => setItem(index, { unit_price: event.target.value })} step="0.01" type="number" value={item.unit_price || 0} />
+            <Input label="Cant." onChange={(event) => setItem(index, { quantity: event.target.value })} type="number" value={numberInputValue(item.quantity, 1)} />
+            <Input label="Precio" onChange={(event) => setItem(index, { unit_price: event.target.value })} step="0.01" type="number" value={numberInputValue(item.unit_price, 0)} />
             <button className="mt-6 grid h-10 w-10 place-items-center rounded-[10px] text-red-800 hover:bg-red-50" onClick={() => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index))} type="button"><Trash2 className="h-4 w-4" /></button>
           </div>
         ))}
       </div>
 
       <div className="mt-6 grid gap-4 grid-cols-2 md:grid-cols-4">
-        <Input label="Descuento" onChange={(event) => setValue('discount', event.target.value)} step="0.01" type="number" value={values.discount || 0} />
-        <Input label="Envío" onChange={(event) => setValue('delivery_fee', event.target.value)} step="0.01" type="number" value={values.delivery_fee || 0} />
-        <Input label="Recogida" onChange={(event) => setValue('pickup_fee', event.target.value)} step="0.01" type="number" value={values.pickup_fee || 0} />
-        <Input label="Instalación" onChange={(event) => setValue('installation_fee', event.target.value)} step="0.01" type="number" value={values.installation_fee || 0} />
-        {!isInvoice ? <Input label="Anticipo requerido" onChange={(event) => setValue('required_deposit', event.target.value)} step="0.01" type="number" value={values.required_deposit || 0} /> : null}
-        {isInvoice ? <Input label="Pagado" onChange={(event) => setValue('amount_paid', event.target.value)} step="0.01" type="number" value={values.amount_paid || 0} /> : null}
+        <Input label="Descuento" onChange={(event) => setValue('discount', event.target.value)} step="0.01" type="number" value={numberInputValue(values.discount, 0)} />
+        <Input label="Envío" onChange={(event) => setValue('delivery_fee', event.target.value)} step="0.01" type="number" value={numberInputValue(values.delivery_fee, 0)} />
+        <Input label="Recogida" onChange={(event) => setValue('pickup_fee', event.target.value)} step="0.01" type="number" value={numberInputValue(values.pickup_fee, 0)} />
+        <Input label="Instalación" onChange={(event) => setValue('installation_fee', event.target.value)} step="0.01" type="number" value={numberInputValue(values.installation_fee, 0)} />
+        {!isInvoice ? <Input label="Anticipo requerido" onChange={(event) => setValue('required_deposit', event.target.value)} step="0.01" type="number" value={numberInputValue(values.required_deposit, 0)} /> : null}
+        {isInvoice ? <Input label="Pagado" onChange={(event) => setValue('amount_paid', event.target.value)} step="0.01" type="number" value={numberInputValue(values.amount_paid, 0)} /> : null}
         <Textarea className="md:col-span-3" label="Notas" onChange={(event) => setValue('notes', event.target.value)} value={values.notes || ''} />
       </div>
 
@@ -371,6 +371,11 @@ function Summary({ label, value, strong }) {
       <span className="font-mono font-semibold text-mash-text1">{formatCurrency(value)}</span>
     </div>
   );
+}
+
+function numberInputValue(value, fallback = 0) {
+  if (value === '' || value === null || value === undefined) return value === '' ? '' : fallback;
+  return value;
 }
 
 function blankItem() {
