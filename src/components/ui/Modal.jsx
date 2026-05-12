@@ -5,16 +5,10 @@ export function Modal({ open, title, children, footer, onClose, size = 'md' }) {
   if (!open) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[120] flex items-end justify-center bg-black/50 px-0 backdrop-blur-sm md:items-center md:p-6"
-      style={{
-        paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)',
-        paddingTop: 'calc(env(safe-area-inset-top) + 12px)',
-      }}
-    >
+    <div className="fixed inset-0 z-[120] flex items-end justify-center bg-black/50 px-0 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-[calc(env(safe-area-inset-top)+12px)] backdrop-blur-sm md:items-start md:p-8">
       <section
         className={cn(
-          'modal-sheet modal-enter flex max-h-[calc(100dvh-24px)] w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-mashXl md:max-h-[calc(100dvh-48px)] md:rounded-2xl',
+          'modal-sheet modal-enter flex max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-24px)] w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-mashXl md:max-h-[calc(100dvh-64px)] md:rounded-2xl',
           size === 'sm' && 'md:max-w-md',
           size === 'md' && 'md:max-w-xl',
           size === 'lg' && 'md:max-w-3xl',
