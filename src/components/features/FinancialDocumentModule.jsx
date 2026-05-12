@@ -331,7 +331,7 @@ function FinancialForm({ document, isInvoice, clients, products, statuses, loadi
           <Button icon={Plus} onClick={() => setItems((current) => [...current, blankItem()])} size="sm" variant="secondary">Agregar producto</Button>
         </div>
         {items.map((item, index) => (
-          <div className="grid gap-3 rounded-2xl border border-mash-border bg-mash-bg p-4 sm:grid-cols-2 md:grid-cols-[1fr_1.2fr_90px_120px_44px]" key={item.localId || item.id}>
+          <div className="grid gap-3 rounded-2xl border border-mash-border bg-mash-bg p-4 sm:grid-cols-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_90px_120px_44px]" key={item.localId || item.id}>
             <Select label="Producto" onChange={(event) => selectProduct(index, event.target.value)} value={item.product_id || ''}>
               <option value="">Manual</option>
               {products.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}
@@ -344,7 +344,7 @@ function FinancialForm({ document, isInvoice, clients, products, statuses, loadi
         ))}
       </div>
 
-      <div className="mt-6 grid gap-4 grid-cols-2 md:grid-cols-4">
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
         <Input label="Descuento" onChange={(event) => setValue('discount', event.target.value)} step="0.01" type="number" value={numberInputValue(values.discount, 0)} />
         <Input label="Envío" onChange={(event) => setValue('delivery_fee', event.target.value)} step="0.01" type="number" value={numberInputValue(values.delivery_fee, 0)} />
         <Input label="Recogida" onChange={(event) => setValue('pickup_fee', event.target.value)} step="0.01" type="number" value={numberInputValue(values.pickup_fee, 0)} />
