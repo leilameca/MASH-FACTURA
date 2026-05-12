@@ -12,6 +12,7 @@ const routeTitles = {
   '/quotes': 'Cotizaciones',
   '/invoices': 'Facturas',
   '/orders': 'Pedidos',
+  '/inventory': 'Inventario',
   '/repairs': 'Reparaciones',
   '/payments': 'Pagos',
   '/expenses': 'Gastos',

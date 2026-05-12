@@ -1,9 +1,16 @@
 import { NavLink } from 'react-router-dom';
 import logoSrc from '../../assets/logo.png';
 import { accountNav, mainNav, navSections } from '../../constants/navigation';
+import { filterNavForRole } from '../../constants/permissions';
+import { useAuth } from '../../hooks/useAuth';
 import { cn } from '../../lib/utils';
 
 export function Sidebar() {
+  const { role } = useAuth();
+  const visibleMainNav = filterNavForRole(mainNav, role);
+  const visibleAccountNav = filterNavForRole(accountNav, role);
+  const visibleSections = navSections.filter((section) => visibleMainNav.some((item) => item.section === section));
+
   return (
     <aside className="fixed inset-y-0 left-0 z-50 hidden w-60 flex-col border-r border-[#1C1C1E] bg-[#0A0A0B] lg:flex">
       <div className="flex h-20 shrink-0 items-center px-4">
@@ -11,13 +18,13 @@ export function Sidebar() {
       </div>
 
       <nav className="min-h-0 flex-1 overflow-y-auto px-2 pb-5">
-        {navSections.map((section) => (
+        {visibleSections.map((section) => (
           <div key={section}>
             <p className="px-3 pb-1.5 pt-4 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#3F3F46]">
               {section}
             </p>
             <div className="space-y-0.5">
-              {mainNav
+              {visibleMainNav
                 .filter((item) => item.section === section)
                 .map((item) => (
                   <SidebarLink key={item.path} item={item} />
@@ -29,7 +36,7 @@ export function Sidebar() {
 
       <div className="shrink-0 border-t border-[#1C1C1E] bg-[#0A0A0B] p-4">
         <div className="mb-3 space-y-0.5">
-          {accountNav.map((item) => (
+          {visibleAccountNav.map((item) => (
             <SidebarLink key={item.label} item={item} compact />
           ))}
         </div>

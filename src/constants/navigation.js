@@ -7,6 +7,7 @@ import {
   Receipt,
   Settings,
   ShoppingBag,
+  Boxes,
   TrendingDown,
   Truck,
   UserCircle,
@@ -22,6 +23,7 @@ export const mainNav = [
   { label: 'Facturas', path: '/invoices', icon: Receipt, section: 'Comercial' },
   { label: 'Pedidos', path: '/orders', icon: Package, section: 'Operaciones' },
   { label: 'Reparaciones', path: '/repairs', icon: Wrench, section: 'Operaciones' },
+  { label: 'Inventario', path: '/inventory', icon: Boxes, section: 'Operaciones' },
   { label: 'Pagos', path: '/payments', icon: CreditCard, section: 'Finanzas' },
   { label: 'Gastos', path: '/expenses', icon: TrendingDown, section: 'Finanzas' },
   { label: 'Suplidores', path: '/suppliers', icon: Truck, section: 'Finanzas' },
@@ -36,6 +38,12 @@ export const bottomNav = [
   { label: 'Pedidos', path: '/orders', icon: Package, center: true },
   { label: 'Facturas', path: '/invoices', icon: Receipt },
   { label: 'Más', path: null, icon: Settings },
+];
+
+export const technicianBottomNav = [
+  { label: 'Pedidos', path: '/orders', icon: Package },
+  { label: 'Inventario', path: '/inventory', icon: Boxes },
+  { label: 'Mi cuenta', path: '/account', icon: UserCircle },
 ];
 
 export const accountNav = [

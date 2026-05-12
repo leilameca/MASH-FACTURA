@@ -8,6 +8,7 @@ import { DashboardPage } from './pages/dashboard/DashboardPage.jsx';
 import { DocumentsPage } from './pages/documents/DocumentsPage.jsx';
 import { ExpensesPage } from './pages/expenses/ExpensesPage.jsx';
 import { InvoicesPage } from './pages/invoices/InvoicesPage.jsx';
+import { InventoryPage } from './pages/inventory/InventoryPage.jsx';
 import { OrdersPage } from './pages/orders/OrdersPage.jsx';
 import { PaymentsPage } from './pages/payments/PaymentsPage.jsx';
 import { ProductsPage } from './pages/products/ProductsPage.jsx';
@@ -33,6 +34,7 @@ export const router = createBrowserRouter([
       { path: 'quotes', element: <QuotesPage /> },
       { path: 'invoices', element: <InvoicesPage /> },
       { path: 'orders', element: <OrdersPage /> },
+      { path: 'inventory', element: <InventoryPage /> },
       { path: 'repairs', element: <RepairsPage /> },
       { path: 'payments', element: <PaymentsPage /> },
       { path: 'expenses', element: <ExpensesPage /> },

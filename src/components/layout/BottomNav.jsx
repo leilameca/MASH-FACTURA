@@ -1,12 +1,19 @@
 import { X } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { accountNav, bottomNav, mainNav, navSections } from '../../constants/navigation';
+import { accountNav, bottomNav, mainNav, navSections, technicianBottomNav } from '../../constants/navigation';
+import { filterNavForRole, isTechnician } from '../../constants/permissions';
+import { useAuth } from '../../hooks/useAuth';
 import { cn } from '../../lib/utils';
 
 export function BottomNav() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const location = useLocation();
+  const { role } = useAuth();
+  const visibleMainNav = filterNavForRole(mainNav, role);
+  const visibleAccountNav = filterNavForRole(accountNav, role);
+  const visibleSections = navSections.filter((section) => visibleMainNav.some((item) => item.section === section));
+  const tabItems = isTechnician(role) ? technicianBottomNav : bottomNav;
 
   return (
     <>
@@ -37,8 +44,8 @@ export function BottomNav() {
           </button>
         </div>
         <div className="space-y-5 px-4">
-          {navSections.map((section) => {
-            const items = mainNav.filter((item) => item.section === section);
+          {visibleSections.map((section) => {
+            const items = visibleMainNav.filter((item) => item.section === section);
             return (
               <section key={section}>
                 <p className="px-1 pb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-mash-text4">
@@ -63,7 +70,7 @@ export function BottomNav() {
               Cuenta
             </p>
             <nav className="grid grid-cols-2 gap-1">
-              {accountNav.map((item) => (
+              {visibleAccountNav.map((item) => (
                 <DrawerLink
                   active={location.pathname === item.path}
                   item={item}
@@ -78,10 +85,13 @@ export function BottomNav() {
 
       {/* ── Bottom tab bar ─────────────────────────────── */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 border-t border-mash-border bg-white/95 backdrop-blur-xl lg:hidden"
+        className={cn(
+          'fixed inset-x-0 bottom-0 z-50 grid border-t border-mash-border bg-white/95 backdrop-blur-xl lg:hidden',
+          tabItems.length === 3 ? 'grid-cols-3' : 'grid-cols-5',
+        )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        {bottomNav.map((item) => {
+        {tabItems.map((item) => {
           const Icon = item.icon;
           if (!item.path) {
             return (

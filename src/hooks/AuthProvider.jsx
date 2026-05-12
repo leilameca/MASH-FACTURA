@@ -4,7 +4,9 @@ import { AuthContext } from './authContext';
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -28,6 +30,33 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (!isSupabaseConfigured || !session?.user) {
+      setProfile(null);
+      setProfileLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setProfileLoading(true);
+
+    supabase
+      .from('profiles')
+      .select('id,full_name,email,role,is_active,phone,avatar_url')
+      .eq('id', session.user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) setProfile(data ?? null);
+      })
+      .finally(() => {
+        if (!cancelled) setProfileLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session]);
+
   async function signIn(email, password) {
     if (!isSupabaseConfigured) {
       return { error: { message: 'Supabase no está configurado. Revisa .env.local y reinicia Vite.' } };
@@ -43,6 +72,7 @@ export function AuthProvider({ children }) {
       await supabase.auth.signOut();
     }
     setSession(null);
+    setProfile(null);
   }
 
   async function resetPassword(email) {
@@ -59,13 +89,16 @@ export function AuthProvider({ children }) {
     () => ({
       session,
       user: session?.user ?? null,
+      profile,
+      role: profile?.role ?? null,
       loading,
+      profileLoading,
       signIn,
       signOut,
       resetPassword,
       isSupabaseConfigured,
     }),
-    [session, loading],
+    [session, profile, loading, profileLoading],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

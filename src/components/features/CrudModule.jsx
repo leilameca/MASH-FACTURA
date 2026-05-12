@@ -42,6 +42,8 @@ export function CrudModule({
   onUpdate,
   detail,
   rowActions,
+  canCreate = true,
+  canDelete = true,
 }) {
   const [rows, setRows] = useState([]);
   const [search, setSearch] = useState('');
@@ -145,7 +147,7 @@ export function CrudModule({
     <div className="space-y-6">
       <Toast message={toast?.message} type={toast?.type} />
       <PageHeader
-        actions={<Button icon={Plus} onClick={() => setEditing({})}>{actionLabel}</Button>}
+        actions={canCreate ? <Button icon={Plus} onClick={() => setEditing({})}>{actionLabel}</Button> : null}
         count={rows.length ? String(rows.length) : undefined}
         subtitle={subtitle}
         title={title}
@@ -199,7 +201,7 @@ export function CrudModule({
                   {rowActions?.(row)}
                   <IconButton icon={Eye} onClick={() => setViewing(row)} />
                   <IconButton icon={Pencil} onClick={() => setEditing(row)} />
-                  <IconButton destructive icon={Trash2} onClick={() => setDeleting(row)} />
+                  {canDelete ? <IconButton destructive icon={Trash2} onClick={() => setDeleting(row)} /> : null}
                 </div>
               </div>
               <ChevronRight className="mt-2 h-4 w-4 text-mash-borderMd" />
@@ -224,7 +226,7 @@ export function CrudModule({
                   {rowActions?.(row)}
                   <IconButton icon={Eye} onClick={() => setViewing(row)} />
                   <IconButton icon={Pencil} onClick={() => setEditing(row)} />
-                  <IconButton destructive icon={Trash2} onClick={() => setDeleting(row)} />
+                  {canDelete ? <IconButton destructive icon={Trash2} onClick={() => setDeleting(row)} /> : null}
                 </div>
               </td>
             </tr>
@@ -419,6 +421,7 @@ function RowStatus({ row }) {
 function renderValue(row, column) {
   const value = column.accessor ? column.accessor(row) : row[column.key];
   if (column.type === 'currency') return formatCurrency(Number(value || 0));
+  if (column.type === 'number') return Number(value || 0).toLocaleString('es-DO');
   if (column.type === 'date') return value ? formatDate(value) : '—';
   if (column.type === 'status') return <Badge variant={statusVariants[String(value)] ?? 'default'}>{statusLabels[String(value)] ?? String(value)}</Badge>;
   if (column.type === 'boolean') return <Badge variant={value ? 'olive' : 'default'}>{value ? 'Activo' : 'Inactivo'}</Badge>;
