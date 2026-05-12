@@ -1,5 +1,6 @@
 import { Document, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import logoSrc from '../../assets/logo.png';
+import signatureSrc from '../../assets/documents/company-signature.png';
 
 const C = {
   black: '#0A0A0B',
@@ -39,6 +40,8 @@ const s = StyleSheet.create({
   notesText: { fontSize: 8.5, color: C.black, lineHeight: 1.5 },
   sigSection: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 32, gap: 20 },
   sigBlock: { flex: 1 },
+  signatureImage: { width: 105, height: 36, objectFit: 'contain', alignSelf: 'center', marginBottom: 2 },
+  signatureSpace: { height: 38 },
   sigLine: { height: 0.5, backgroundColor: C.gray300, marginBottom: 4 },
   sigLabel: { fontSize: 7, color: C.gray600, textAlign: 'center' },
   footer: { position: 'absolute', bottom: '12mm', left: '18mm', right: '18mm' },
@@ -125,18 +128,9 @@ export function DeliveryNotePdf({ order, client, items = [] }) {
         </View>
 
         <View style={s.sigSection}>
-          <View style={s.sigBlock}>
-            <View style={s.sigLine} />
-            <Text style={s.sigLabel}>Nombre de quien recibe</Text>
-          </View>
-          <View style={s.sigBlock}>
-            <View style={s.sigLine} />
-            <Text style={s.sigLabel}>Firma de quien recibe</Text>
-          </View>
-          <View style={s.sigBlock}>
-            <View style={s.sigLine} />
-            <Text style={s.sigLabel}>Representante MASH</Text>
-          </View>
+          <SignatureBlock label="Nombre de quien recibe" />
+          <SignatureBlock label="Firma de quien recibe" />
+          <SignatureBlock label="Representante MASH" signed />
         </View>
 
         <View style={s.footer} fixed>
@@ -157,6 +151,16 @@ function Field({ label, value }) {
     <View style={{ marginBottom: 5 }}>
       <Text style={s.fieldLabel}>{label}</Text>
       <Text style={s.fieldValue}>{value}</Text>
+    </View>
+  );
+}
+
+function SignatureBlock({ label, signed = false }) {
+  return (
+    <View style={s.sigBlock}>
+      {signed ? <Image src={signatureSrc} style={s.signatureImage} /> : <View style={s.signatureSpace} />}
+      <View style={s.sigLine} />
+      <Text style={s.sigLabel}>{label}</Text>
     </View>
   );
 }

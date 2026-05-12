@@ -1,6 +1,7 @@
 import { Document, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import { formatCurrency } from '../../lib/utils';
 import logoSrc from '../../assets/logo.png';
+import signatureSrc from '../../assets/documents/company-signature.png';
 
 const C = {
   black: '#0A0A0B',
@@ -41,6 +42,8 @@ const s = StyleSheet.create({
   notesText: { fontSize: 8, color: C.gray700, lineHeight: 1.5 },
   sigSection: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 32, gap: 20 },
   sigBlock: { flex: 1 },
+  signatureImage: { width: 112, height: 38, objectFit: 'contain', alignSelf: 'center', marginBottom: 2 },
+  signatureSpace: { height: 40 },
   sigLine: { height: 0.5, backgroundColor: C.gray300, marginBottom: 4 },
   sigLabel: { fontSize: 7, color: C.gray600, textAlign: 'center' },
   footer: { position: 'absolute', bottom: '12mm', left: '18mm', right: '18mm' },
@@ -117,14 +120,8 @@ export function PaymentReceiptPdf({ payment, invoice, client, balanceBefore }) {
         </View>
 
         <View style={s.sigSection}>
-          <View style={s.sigBlock}>
-            <View style={s.sigLine} />
-            <Text style={s.sigLabel}>Recibido por MASH</Text>
-          </View>
-          <View style={s.sigBlock}>
-            <View style={s.sigLine} />
-            <Text style={s.sigLabel}>Firma del cliente</Text>
-          </View>
+          <SignatureBlock label="Recibido por MASH" signed />
+          <SignatureBlock label="Firma del cliente" />
         </View>
 
         <View style={s.footer} fixed>
@@ -154,6 +151,16 @@ function TotalRow({ label, value }) {
     <View style={s.totalRow}>
       <Text style={s.totalLabel}>{label}</Text>
       <Text style={s.totalValue}>{value}</Text>
+    </View>
+  );
+}
+
+function SignatureBlock({ label, signed = false }) {
+  return (
+    <View style={s.sigBlock}>
+      {signed ? <Image src={signatureSrc} style={s.signatureImage} /> : <View style={s.signatureSpace} />}
+      <View style={s.sigLine} />
+      <Text style={s.sigLabel}>{label}</Text>
     </View>
   );
 }

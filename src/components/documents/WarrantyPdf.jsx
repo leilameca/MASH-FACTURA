@@ -1,5 +1,6 @@
 import { Document, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import logoSrc from '../../assets/logo.png';
+import signatureSrc from '../../assets/documents/company-signature.png';
 
 const C = {
   black:     '#0A0A0B',
@@ -60,6 +61,8 @@ const s = StyleSheet.create({
 
   sigSection:     { flexDirection: 'row', justifyContent: 'space-between', marginTop: 24, gap: 20 },
   sigBlock:       { flex: 1 },
+  signatureImage: { width: 105, height: 36, objectFit: 'contain', alignSelf: 'center', marginBottom: 2 },
+  signatureSpace: { height: 38 },
   sigLine:        { height: 0.5, backgroundColor: C.gray300, marginBottom: 4 },
   sigLabel:       { fontSize: 7, color: C.gray600, textAlign: 'center' },
 
@@ -202,18 +205,9 @@ export function WarrantyPdf({ order, client, items }) {
 
         {/* ── FIRMAS ─────────────────────────────────── */}
         <View style={s.sigSection}>
-          <View style={s.sigBlock}>
-            <View style={s.sigLine} />
-            <Text style={s.sigLabel}>Firma del cliente</Text>
-          </View>
-          <View style={s.sigBlock}>
-            <View style={s.sigLine} />
-            <Text style={s.sigLabel}>Representante MASH</Text>
-          </View>
-          <View style={s.sigBlock}>
-            <View style={s.sigLine} />
-            <Text style={s.sigLabel}>Fecha de entrega</Text>
-          </View>
+          <SignatureBlock label="Firma del cliente" />
+          <SignatureBlock label="Representante MASH" signed />
+          <SignatureBlock label="Fecha de entrega" />
         </View>
 
         {/* ── TÉRMINOS ───────────────────────────────── */}
@@ -244,6 +238,16 @@ function Field({ label, value }) {
     <View style={{ marginBottom: 5 }}>
       <Text style={s.fieldLabel}>{label}</Text>
       <Text style={s.fieldValue}>{value}</Text>
+    </View>
+  );
+}
+
+function SignatureBlock({ label, signed = false }) {
+  return (
+    <View style={s.sigBlock}>
+      {signed ? <Image src={signatureSrc} style={s.signatureImage} /> : <View style={s.signatureSpace} />}
+      <View style={s.sigLine} />
+      <Text style={s.sigLabel}>{label}</Text>
     </View>
   );
 }
