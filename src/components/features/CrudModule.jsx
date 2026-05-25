@@ -403,7 +403,7 @@ function FilterChips({ options, active, onChange }) {
 function IconButton({ icon: Icon, onClick, destructive = false }) {
   return (
     <button
-      className={cn('grid h-9 w-9 place-items-center rounded-[10px] text-mash-text3 hover:bg-mash-surface2 hover:text-mash-text1', destructive && 'hover:bg-red-50 hover:text-red-800')}
+      className={cn('grid h-10 w-10 place-items-center rounded-[10px] text-mash-text3 hover:bg-mash-surface2 hover:text-mash-text1', destructive && 'hover:bg-red-50 hover:text-red-800')}
       onClick={onClick}
       type="button"
     >

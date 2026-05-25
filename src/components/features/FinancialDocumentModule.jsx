@@ -339,7 +339,7 @@ function FinancialForm({ document, isInvoice, clients, products, statuses, loadi
             <Input label="Descripción" onChange={(event) => setItem(index, { description: event.target.value })} value={item.description || ''} />
             <Input label="Cant." onChange={(event) => setItem(index, { quantity: event.target.value })} type="number" value={numberInputValue(item.quantity, 1)} />
             <Input label="Precio" onChange={(event) => setItem(index, { unit_price: event.target.value })} step="0.01" type="number" value={numberInputValue(item.unit_price, 0)} />
-            <button className="grid h-10 w-10 place-items-center self-end rounded-[10px] text-red-800 hover:bg-red-50 xl:mt-6" onClick={() => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index))} type="button"><Trash2 className="h-4 w-4" /></button>
+            <button className="grid h-11 w-11 place-items-center self-end rounded-[10px] text-red-800 hover:bg-red-50 sm:col-span-2 sm:justify-self-end xl:col-span-1 xl:mt-6" onClick={() => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index))} type="button"><Trash2 className="h-4 w-4" /></button>
           </div>
         ))}
       </div>
@@ -354,7 +354,7 @@ function FinancialForm({ document, isInvoice, clients, products, statuses, loadi
         <Textarea className="lg:col-span-3" label="Notas" onChange={(event) => setValue('notes', event.target.value)} value={values.notes || ''} />
       </div>
 
-      <div className="mt-6 w-full rounded-2xl border border-mash-border bg-white p-4 sm:ml-auto sm:max-w-sm">
+      <div className="mt-6 w-full rounded-2xl border border-mash-border bg-white p-4 md:ml-auto md:max-w-sm">
         <Summary label="Subtotal" value={totals.subtotal} />
         <Summary label="Descuento" value={totals.discount} />
         <Summary label="ITBIS" value={totals.tax_amount} />
