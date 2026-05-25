@@ -25,7 +25,7 @@ export function Modal({ open, title, children, footer, onClose, size = 'md' }) {
     <div className="modal-overlay fixed inset-0 z-[120] flex items-end justify-center bg-black/50 px-0 backdrop-blur-sm md:items-start md:p-8">
       <section
         className={cn(
-          'modal-sheet modal-enter flex w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-mashXl md:rounded-2xl',
+          'modal-sheet modal-enter flex w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-mashXl md:my-auto md:rounded-2xl',
           size === 'sm' && 'md:max-w-md',
           size === 'md' && 'md:max-w-xl',
           size === 'lg' && 'md:max-w-3xl',
