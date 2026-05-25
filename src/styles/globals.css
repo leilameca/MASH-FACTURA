@@ -122,18 +122,18 @@ button:disabled {
 }
 
 .modal-sheet {
-  min-height: 0;
   max-height: calc(100vh - 24px);
   max-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px);
+  overflow: hidden;
+}
+
+/* Content div is the scroll container — header and footer always stay visible */
+.modal-content {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-}
-
-.modal-content {
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  scroll-padding-bottom: 6rem;
+  /* viewport - header (~65px) - footer (~75px) - safe areas - buffer */
+  max-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 190px);
 }
 
 .modal-footer {
@@ -146,12 +146,18 @@ button:disabled {
     max-height: calc(100svh - 24px);
     max-height: calc(100svh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px);
   }
+  .modal-content {
+    max-height: calc(100svh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 190px);
+  }
 }
 
 @supports (height: 100dvh) {
   .modal-sheet {
     max-height: calc(100dvh - 24px);
     max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px);
+  }
+  .modal-content {
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 190px);
   }
 }
 
@@ -182,6 +188,11 @@ button:disabled {
     max-height: calc(100vh - 64px);
   }
 
+  /* Desktop: viewport - overlay padding (64px) - header (~68px) - footer (~76px) - buffer */
+  .modal-content {
+    max-height: calc(100vh - 260px);
+  }
+
   .modal-footer {
     padding-bottom: 1rem;
   }
@@ -189,17 +200,15 @@ button:disabled {
 
 @supports (height: 100svh) {
   @media (min-width: 768px) {
-    .modal-sheet {
-      max-height: calc(100svh - 64px);
-    }
+    .modal-sheet { max-height: calc(100svh - 64px); }
+    .modal-content { max-height: calc(100svh - 260px); }
   }
 }
 
 @supports (height: 100dvh) {
   @media (min-width: 768px) {
-    .modal-sheet {
-      max-height: calc(100dvh - 64px);
-    }
+    .modal-sheet { max-height: calc(100dvh - 64px); }
+    .modal-content { max-height: calc(100dvh - 260px); }
   }
 }
 

@@ -32,7 +32,7 @@ export function Modal({ open, title, children, footer, onClose, size = 'md' }) {
           size === 'xl' && 'md:max-w-4xl',
         )}
       >
-        <header className="sticky top-0 z-10 flex items-center justify-between gap-4 rounded-t-3xl border-b border-mash-border bg-white px-4 py-4 sm:px-6 sm:py-5 md:rounded-t-2xl">
+        <header className="flex shrink-0 items-center justify-between gap-4 rounded-t-3xl border-b border-mash-border bg-white px-4 py-4 sm:px-6 sm:py-5 md:rounded-t-2xl">
           <h2 className="text-lg font-semibold text-mash-text1">{title}</h2>
           <button aria-label="Cerrar" className="grid h-11 w-11 shrink-0 place-items-center rounded-[10px] text-mash-text3 hover:bg-mash-surface2" onClick={onClose} type="button">
             <X className="h-5 w-5" />
@@ -42,7 +42,7 @@ export function Modal({ open, title, children, footer, onClose, size = 'md' }) {
           {children}
         </div>
         {footer ? (
-          <footer className="modal-footer sticky bottom-0 border-t border-mash-border bg-white px-4 py-3 sm:px-6 sm:py-4">
+          <footer className="modal-footer shrink-0 border-t border-mash-border bg-white px-4 py-3 sm:px-6 sm:py-4">
             <div className="flex flex-col-reverse gap-2 md:flex-row md:justify-end">{footer}</div>
           </footer>
         ) : null}
