@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '../../lib/utils';
 
 export function Modal({ open, title, children, footer, onClose, size = 'md' }) {
@@ -21,7 +22,7 @@ export function Modal({ open, title, children, footer, onClose, size = 'md' }) {
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div className="modal-overlay fixed inset-0 z-[120] flex items-end justify-center bg-black/50 px-0 backdrop-blur-sm md:items-center md:p-8">
       <section
         className={cn(
@@ -47,6 +48,7 @@ export function Modal({ open, title, children, footer, onClose, size = 'md' }) {
           </footer>
         ) : null}
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }
