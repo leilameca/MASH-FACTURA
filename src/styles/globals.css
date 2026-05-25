@@ -114,8 +114,7 @@ button:disabled {
 
 /* Modal bottom sheet (mobile) */
 .modal-overlay {
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  overflow: hidden;
   padding-top: 12px;
   padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
   padding-bottom: 12px;
