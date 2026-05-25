@@ -31,7 +31,7 @@ export function BottomNav() {
           'fixed inset-x-0 bottom-[64px] z-50 max-h-[76vh] overflow-y-auto rounded-t-3xl border-t border-mash-border bg-white pb-4 shadow-xl transition-transform duration-300 lg:hidden',
           drawerOpen ? 'translate-y-0' : 'translate-y-full',
         )}
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
       >
         <div className="flex items-center justify-between px-6 pb-2 pt-5">
           <p className="text-[13px] font-semibold uppercase tracking-[0.06em] text-mash-text3">Más secciones</p>
@@ -89,7 +89,7 @@ export function BottomNav() {
           'fixed inset-x-0 bottom-0 z-50 grid border-t border-mash-border bg-white/95 backdrop-blur-xl lg:hidden',
           tabItems.length === 3 ? 'grid-cols-3' : 'grid-cols-5',
         )}
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         {tabItems.map((item) => {
           const Icon = item.icon;

@@ -114,12 +114,15 @@ button:disabled {
 
 /* Modal bottom sheet (mobile) */
 .modal-overlay {
-  padding-top: calc(env(safe-area-inset-top) + 12px);
-  padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
+  padding-top: 12px;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
+  padding-bottom: 12px;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
 }
 
 .modal-sheet {
-  max-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px);
+  max-height: calc(100vh - 24px);
+  max-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px);
 }
 
 .modal-content {
@@ -128,12 +131,14 @@ button:disabled {
 }
 
 .modal-footer {
-  padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
+  padding-bottom: 12px;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
 }
 
 @supports (height: 100dvh) {
   .modal-sheet {
-    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px);
+    max-height: calc(100dvh - 24px);
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px);
   }
 }
 
@@ -208,7 +213,8 @@ button:disabled {
 
 .toast-safe {
   width: calc(100% - 2rem);
-  bottom: calc(env(safe-area-inset-bottom) + 72px);
+  bottom: 72px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 72px);
 }
 
 /* Smooth scrollbar styling */
