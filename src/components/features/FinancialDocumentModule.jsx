@@ -308,7 +308,7 @@ function FinancialForm({ document, isInvoice, clients, products, statuses, loadi
       size="xl"
       title={isInvoice ? 'Factura' : 'Cotización'}
     >
-      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+      <div className="grid content-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Select label="Cliente" onChange={(event) => setValue('client_id', event.target.value)} value={values.client_id || ''}>
           <option value="">Seleccionar cliente</option>
           {clients.map((client) => <option key={client.id} value={client.id}>{client.full_name}</option>)}
@@ -319,19 +319,19 @@ function FinancialForm({ document, isInvoice, clients, products, statuses, loadi
         </Select>
         <Input label="Fecha" onChange={(event) => setValue('issue_date', event.target.value)} type="date" value={values.issue_date || ''} />
         {!isInvoice ? <Input label="Válida hasta" onChange={(event) => setValue('valid_until', event.target.value)} type="date" value={values.valid_until || ''} /> : null}
-        <label className="flex min-h-12 items-center gap-3 rounded-[10px] border border-mash-borderMd px-4 text-sm font-medium text-mash-text2 md:mt-6 md:min-h-10">
+        <label className="flex min-h-12 items-center gap-3 rounded-[10px] border border-mash-borderMd px-4 text-sm font-medium text-mash-text2 lg:mt-6 lg:min-h-10">
           <input checked={Boolean(values.tax_enabled)} className="h-4 w-4 accent-mash-brand" onChange={(event) => setValue('tax_enabled', event.target.checked)} type="checkbox" />
           ITBIS 18%
         </label>
       </div>
 
       <div className="mt-6 space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="text-base font-semibold text-mash-text1">Líneas</h3>
-          <Button icon={Plus} onClick={() => setItems((current) => [...current, blankItem()])} size="sm" variant="secondary">Agregar producto</Button>
+          <Button className="w-full sm:w-auto" icon={Plus} onClick={() => setItems((current) => [...current, blankItem()])} size="sm" variant="secondary">Agregar producto</Button>
         </div>
         {items.map((item, index) => (
-          <div className="grid gap-3 rounded-2xl border border-mash-border bg-mash-bg p-4 sm:grid-cols-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_90px_120px_44px]" key={item.localId || item.id}>
+          <div className="grid gap-3 rounded-2xl border border-mash-border bg-mash-bg p-4 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_90px_120px_44px]" key={item.localId || item.id}>
             <Select label="Producto" onChange={(event) => selectProduct(index, event.target.value)} value={item.product_id || ''}>
               <option value="">Manual</option>
               {products.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}
@@ -339,19 +339,19 @@ function FinancialForm({ document, isInvoice, clients, products, statuses, loadi
             <Input label="Descripción" onChange={(event) => setItem(index, { description: event.target.value })} value={item.description || ''} />
             <Input label="Cant." onChange={(event) => setItem(index, { quantity: event.target.value })} type="number" value={numberInputValue(item.quantity, 1)} />
             <Input label="Precio" onChange={(event) => setItem(index, { unit_price: event.target.value })} step="0.01" type="number" value={numberInputValue(item.unit_price, 0)} />
-            <button className="mt-6 grid h-10 w-10 place-items-center rounded-[10px] text-red-800 hover:bg-red-50" onClick={() => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index))} type="button"><Trash2 className="h-4 w-4" /></button>
+            <button className="grid h-10 w-10 place-items-center self-end rounded-[10px] text-red-800 hover:bg-red-50 xl:mt-6" onClick={() => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index))} type="button"><Trash2 className="h-4 w-4" /></button>
           </div>
         ))}
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+      <div className="mt-6 grid content-start grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Input label="Descuento" onChange={(event) => setValue('discount', event.target.value)} step="0.01" type="number" value={numberInputValue(values.discount, 0)} />
         <Input label="Envío" onChange={(event) => setValue('delivery_fee', event.target.value)} step="0.01" type="number" value={numberInputValue(values.delivery_fee, 0)} />
         <Input label="Recogida" onChange={(event) => setValue('pickup_fee', event.target.value)} step="0.01" type="number" value={numberInputValue(values.pickup_fee, 0)} />
         <Input label="Instalación" onChange={(event) => setValue('installation_fee', event.target.value)} step="0.01" type="number" value={numberInputValue(values.installation_fee, 0)} />
         {!isInvoice ? <Input label="Anticipo requerido" onChange={(event) => setValue('required_deposit', event.target.value)} step="0.01" type="number" value={numberInputValue(values.required_deposit, 0)} /> : null}
         {isInvoice ? <Input label="Pagado" onChange={(event) => setValue('amount_paid', event.target.value)} step="0.01" type="number" value={numberInputValue(values.amount_paid, 0)} /> : null}
-        <Textarea className="md:col-span-3" label="Notas" onChange={(event) => setValue('notes', event.target.value)} value={values.notes || ''} />
+        <Textarea className="lg:col-span-3" label="Notas" onChange={(event) => setValue('notes', event.target.value)} value={values.notes || ''} />
       </div>
 
       <div className="mt-6 w-full rounded-2xl border border-mash-border bg-white p-4 sm:ml-auto sm:max-w-sm">

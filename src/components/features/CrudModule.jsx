@@ -304,7 +304,7 @@ function DynamicFormModal({ open, title, fields, values, loading, onSubmit, onCl
       size="lg"
       title={title}
     >
-      <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit((formValues) => onSubmit(formValues, files))}>
+      <form className="grid content-start gap-4 pb-1 md:grid-cols-2" onSubmit={handleSubmit((formValues) => onSubmit(formValues, files))}>
         {fields.map((field) => (
           <FieldControl
             error={errors[field.name]?.message}

@@ -29,8 +29,8 @@ export function Toast({ message, type = 'success', duration = 4000 }) {
   return (
     <div
       className={cn(
-        'fixed z-[140] w-[calc(100%-2rem)] max-w-[340px] overflow-hidden rounded-2xl border border-mash-border bg-white shadow-mashXl',
-        'bottom-[calc(env(safe-area-inset-bottom)+72px)] left-1/2 -translate-x-1/2',
+        'toast-safe fixed z-[140] max-w-[340px] overflow-hidden rounded-2xl border border-mash-border bg-white shadow-mashXl',
+        'left-1/2 -translate-x-1/2',
         'md:bottom-auto md:left-auto md:right-4 md:top-4 md:translate-x-0',
         'animate-[page-enter_200ms_ease-out_both]',
       )}
