@@ -1,3 +1,12 @@
+export const employeeAreas = ['tejido', 'soldadura', 'pintura', 'general'];
+export const employeePaymentTypes = [
+  { value: 'por_ajuste', label: 'Por ajuste' },
+  { value: 'por_hora', label: 'Por hora' },
+  { value: 'fijo', label: 'Salario fijo' },
+];
+export const tarifarioAreas = ['tejido', 'soldadura', 'pintura'];
+export const tarifarioUnits = ['pieza', 'trabajo', 'set', 'metro', 'hora'];
+
 export const productCategories = [
   'muebles nuevos',
   'reparación',

@@ -756,4 +756,134 @@ on storage.objects for delete
 to authenticated
 using (bucket_id in ('order-images', 'repair-images', 'receipts', 'generated-documents', 'product-images'));
 
+-- ============================================================================
+-- NÓMINA / PAYROLL MODULE
+-- ============================================================================
+
+create table if not exists public.employees (
+  id uuid primary key default gen_random_uuid(),
+  employee_id text unique not null,
+  name text not null,
+  area text,
+  payment_type text,
+  phone text,
+  hire_date date,
+  is_active boolean not null default true,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.tarifario (
+  id uuid primary key default gen_random_uuid(),
+  code text unique not null,
+  work_name text not null,
+  area text not null,
+  unit text,
+  price numeric(10,2) not null default 0 check (price >= 0),
+  is_active boolean not null default true,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.production_records (
+  id uuid primary key default gen_random_uuid(),
+  date date not null default current_date,
+  employee_id uuid references public.employees(id) on delete restrict,
+  tarifario_id uuid references public.tarifario(id) on delete restrict,
+  quantity numeric(10,2) not null default 1 check (quantity > 0),
+  unit_price numeric(10,2) not null default 0 check (unit_price >= 0),
+  total numeric(10,2) not null default 0 check (total >= 0),
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.payroll_adjustments (
+  id uuid primary key default gen_random_uuid(),
+  employee_id uuid references public.employees(id) on delete cascade,
+  period_key text not null,
+  bonus numeric(10,2) not null default 0 check (bonus >= 0),
+  discount numeric(10,2) not null default 0 check (discount >= 0),
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (employee_id, period_key)
+);
+
+-- Triggers updated_at
+
+drop trigger if exists set_employees_updated_at on public.employees;
+create trigger set_employees_updated_at
+before update on public.employees
+for each row execute function public.set_updated_at();
+
+drop trigger if exists set_tarifario_updated_at on public.tarifario;
+create trigger set_tarifario_updated_at
+before update on public.tarifario
+for each row execute function public.set_updated_at();
+
+drop trigger if exists set_production_records_updated_at on public.production_records;
+create trigger set_production_records_updated_at
+before update on public.production_records
+for each row execute function public.set_updated_at();
+
+drop trigger if exists set_payroll_adjustments_updated_at on public.payroll_adjustments;
+create trigger set_payroll_adjustments_updated_at
+before update on public.payroll_adjustments
+for each row execute function public.set_updated_at();
+
+-- Indexes
+
+create index if not exists idx_employees_name on public.employees (name);
+create index if not exists idx_employees_area on public.employees (area);
+create index if not exists idx_employees_is_active on public.employees (is_active);
+
+create index if not exists idx_tarifario_area on public.tarifario (area);
+create index if not exists idx_tarifario_code on public.tarifario (code);
+create index if not exists idx_tarifario_is_active on public.tarifario (is_active);
+
+create index if not exists idx_production_records_date on public.production_records (date desc);
+create index if not exists idx_production_records_employee_id on public.production_records (employee_id);
+create index if not exists idx_production_records_tarifario_id on public.production_records (tarifario_id);
+
+create index if not exists idx_payroll_adjustments_employee_id on public.payroll_adjustments (employee_id);
+create index if not exists idx_payroll_adjustments_period_key on public.payroll_adjustments (period_key);
+
+-- RLS
+
+alter table public.employees enable row level security;
+alter table public.tarifario enable row level security;
+alter table public.production_records enable row level security;
+alter table public.payroll_adjustments enable row level security;
+
+drop policy if exists "Authenticated users can manage employees" on public.employees;
+create policy "Authenticated users can manage employees"
+on public.employees for all
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "Authenticated users can manage tarifario" on public.tarifario;
+create policy "Authenticated users can manage tarifario"
+on public.tarifario for all
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "Authenticated users can manage production records" on public.production_records;
+create policy "Authenticated users can manage production records"
+on public.production_records for all
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "Authenticated users can manage payroll adjustments" on public.payroll_adjustments;
+create policy "Authenticated users can manage payroll adjustments"
+on public.payroll_adjustments for all
+to authenticated
+using (true)
+with check (true);
+
 commit;

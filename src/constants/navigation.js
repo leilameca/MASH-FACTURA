@@ -1,5 +1,7 @@
 import {
+  ClipboardList,
   CreditCard,
+  DollarSign,
   FileBadge,
   FileSearch,
   LayoutDashboard,
@@ -8,10 +10,12 @@ import {
   Settings,
   ShoppingBag,
   Boxes,
+  Tag,
   TrendingDown,
   Truck,
   UserCircle,
   Users,
+  Users2,
   Wrench,
 } from 'lucide-react';
 
@@ -28,9 +32,13 @@ export const mainNav = [
   { label: 'Gastos', path: '/expenses', icon: TrendingDown, section: 'Finanzas' },
   { label: 'Suplidores', path: '/suppliers', icon: Truck, section: 'Finanzas' },
   { label: 'Documentos', path: '/documents', icon: FileBadge, section: 'Documentos' },
+  { label: 'Empleados', path: '/employees', icon: Users2, section: 'Nómina' },
+  { label: 'Tarifario', path: '/tarifario', icon: Tag, section: 'Nómina' },
+  { label: 'Producción', path: '/production', icon: ClipboardList, section: 'Nómina' },
+  { label: 'Nómina', path: '/payroll', icon: DollarSign, section: 'Nómina' },
 ];
 
-export const navSections = ['Principal', 'Comercial', 'Operaciones', 'Finanzas', 'Documentos'];
+export const navSections = ['Principal', 'Comercial', 'Operaciones', 'Finanzas', 'Documentos', 'Nómina'];
 
 export const bottomNav = [
   { label: 'Inicio', path: '/dashboard', icon: LayoutDashboard },
