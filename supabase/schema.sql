@@ -800,6 +800,21 @@ create table if not exists public.production_records (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.payroll_payments (
+  id uuid primary key default gen_random_uuid(),
+  employee_id uuid references public.employees(id) on delete cascade,
+  period_key text not null,
+  amount numeric(10,2) not null check (amount > 0),
+  payment_method text not null default 'efectivo',
+  payment_date date not null default current_date,
+  order_id uuid references public.orders(id) on delete set null,
+  expense_id uuid references public.expenses(id) on delete set null,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (employee_id, period_key)
+);
+
 create table if not exists public.payroll_adjustments (
   id uuid primary key default gen_random_uuid(),
   employee_id uuid references public.employees(id) on delete cascade,
@@ -829,6 +844,11 @@ create trigger set_production_records_updated_at
 before update on public.production_records
 for each row execute function public.set_updated_at();
 
+drop trigger if exists set_payroll_payments_updated_at on public.payroll_payments;
+create trigger set_payroll_payments_updated_at
+before update on public.payroll_payments
+for each row execute function public.set_updated_at();
+
 drop trigger if exists set_payroll_adjustments_updated_at on public.payroll_adjustments;
 create trigger set_payroll_adjustments_updated_at
 before update on public.payroll_adjustments
@@ -848,6 +868,9 @@ create index if not exists idx_production_records_date on public.production_reco
 create index if not exists idx_production_records_employee_id on public.production_records (employee_id);
 create index if not exists idx_production_records_tarifario_id on public.production_records (tarifario_id);
 
+create index if not exists idx_payroll_payments_employee_id on public.payroll_payments (employee_id);
+create index if not exists idx_payroll_payments_period_key on public.payroll_payments (period_key);
+
 create index if not exists idx_payroll_adjustments_employee_id on public.payroll_adjustments (employee_id);
 create index if not exists idx_payroll_adjustments_period_key on public.payroll_adjustments (period_key);
 
@@ -856,6 +879,7 @@ create index if not exists idx_payroll_adjustments_period_key on public.payroll_
 alter table public.employees enable row level security;
 alter table public.tarifario enable row level security;
 alter table public.production_records enable row level security;
+alter table public.payroll_payments enable row level security;
 alter table public.payroll_adjustments enable row level security;
 
 drop policy if exists "Authenticated users can manage employees" on public.employees;
@@ -875,6 +899,13 @@ with check (true);
 drop policy if exists "Authenticated users can manage production records" on public.production_records;
 create policy "Authenticated users can manage production records"
 on public.production_records for all
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "Authenticated users can manage payroll payments" on public.payroll_payments;
+create policy "Authenticated users can manage payroll payments"
+on public.payroll_payments for all
 to authenticated
 using (true)
 with check (true);
