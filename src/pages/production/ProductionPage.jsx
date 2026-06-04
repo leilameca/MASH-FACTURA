@@ -1,5 +1,7 @@
-import { ClipboardList, Pencil, Plus, Trash2 } from 'lucide-react';
+import { pdf } from '@react-pdf/renderer';
+import { ClipboardList, FileDown, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { ProductionReportPdf } from '../../components/documents/ProductionReportPdf';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
@@ -23,6 +25,49 @@ function firstOfMonth() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
 }
 
+function getPeriodRange(preset) {
+  const today = new Date();
+  const end = today.toISOString().slice(0, 10);
+  switch (preset) {
+    case 'today':
+      return { start: end, end };
+    case 'week': {
+      const d = new Date(today);
+      const day = d.getDay();
+      d.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+      return { start: d.toISOString().slice(0, 10), end };
+    }
+    case 'month': {
+      const d = new Date(today.getFullYear(), today.getMonth(), 1);
+      return { start: d.toISOString().slice(0, 10), end };
+    }
+    case '3m': {
+      const d = new Date(today);
+      d.setMonth(d.getMonth() - 3);
+      return { start: d.toISOString().slice(0, 10), end };
+    }
+    case '6m': {
+      const d = new Date(today);
+      d.setMonth(d.getMonth() - 6);
+      return { start: d.toISOString().slice(0, 10), end };
+    }
+    case 'year': {
+      return { start: `${today.getFullYear()}-01-01`, end };
+    }
+    default:
+      return null;
+  }
+}
+
+const PERIOD_PRESETS = [
+  { key: 'today', label: 'Hoy' },
+  { key: 'week',  label: 'Semana' },
+  { key: 'month', label: 'Mes' },
+  { key: '3m',    label: '3 meses' },
+  { key: '6m',    label: '6 meses' },
+  { key: 'year',  label: 'Año' },
+];
+
 const emptyForm = () => ({
   date: todayStr(),
   employee_id: '',
@@ -38,6 +83,7 @@ export function ProductionPage() {
   const [tarifario, setTarifario] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
   const [toast, setToast] = useState(null);
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
@@ -52,7 +98,7 @@ export function ProductionPage() {
     try {
       const { data, error } = await supabase
         .from('production_records')
-        .select('*, employees(id, name, area), tarifario(id, work_name, unit, area)')
+        .select('*, employees(id, name, area, employee_id), tarifario(id, work_name, unit, area)')
         .gte('date', startDate)
         .lte('date', endDate)
         .order('date', { ascending: false });
@@ -77,10 +123,12 @@ export function ProductionPage() {
       .catch(() => {});
   }, []);
 
-  function openNew() {
-    setForm(emptyForm());
-    setEditing({});
+  function applyPreset(key) {
+    const range = getPeriodRange(key);
+    if (range) { setStartDate(range.start); setEndDate(range.end); }
   }
+
+  function openNew() { setForm(emptyForm()); setEditing({}); }
 
   function openEdit(row) {
     setForm({
@@ -147,6 +195,31 @@ export function ProductionPage() {
     }
   }
 
+  async function handleGeneratePdf() {
+    if (!filtered.length) {
+      setToast({ type: 'error', message: 'No hay registros en este período.' });
+      return;
+    }
+    setGeneratingPdf(true);
+    try {
+      const empName = filterEmployee ? employees.find((e) => e.id === filterEmployee)?.name : null;
+      const blob = await pdf(
+        <ProductionReportPdf
+          endDate={endDate}
+          employeeName={empName}
+          records={filtered}
+          startDate={startDate}
+        />
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (err) {
+      setToast({ type: 'error', message: 'Error generando PDF: ' + err.message });
+    } finally {
+      setGeneratingPdf(false);
+    }
+  }
+
   const filtered = filterEmployee ? records.filter((r) => r.employee_id === filterEmployee) : records;
   const grandTotal = filtered.reduce((sum, r) => sum + Number(r.total || 0), 0);
 
@@ -155,12 +228,34 @@ export function ProductionPage() {
       <Toast message={toast?.message} type={toast?.type} />
 
       <PageHeader
-        actions={<Button icon={Plus} onClick={openNew}>Nueva entrada</Button>}
+        actions={(
+          <div className="flex gap-2">
+            <Button icon={FileDown} loading={generatingPdf} onClick={handleGeneratePdf} variant="secondary">
+              PDF
+            </Button>
+            <Button icon={Plus} onClick={openNew}>Nueva entrada</Button>
+          </div>
+        )}
         count={filtered.length ? String(filtered.length) : undefined}
         subtitle="Registro diario de trabajos realizados por cada empleado."
         title="Producción"
       />
 
+      {/* Period presets */}
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0">
+        {PERIOD_PRESETS.map((p) => (
+          <button
+            className="shrink-0 rounded-full border border-mash-borderMd bg-white px-3.5 py-1.5 text-sm font-medium text-mash-text2 transition hover:border-mash-brand hover:text-mash-brand"
+            key={p.key}
+            onClick={() => applyPreset(p.key)}
+            type="button"
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Date range + employee filter */}
       <div className="flex flex-wrap gap-3">
         <div className="flex items-center gap-2">
           <span className="text-sm text-mash-text3">Desde</span>
@@ -233,13 +328,13 @@ export function ProductionPage() {
       {filtered.length > 0 && (
         <DataTable
           columns={[
-            { key: 'date', label: 'Fecha' },
-            { key: 'employee', label: 'Empleado' },
-            { key: 'work', label: 'Trabajo' },
-            { key: 'quantity', label: 'Cant.', align: 'right' },
+            { key: 'date',       label: 'Fecha' },
+            { key: 'employee',   label: 'Empleado' },
+            { key: 'work',       label: 'Trabajo' },
+            { key: 'quantity',   label: 'Cant.',       align: 'right' },
             { key: 'unit_price', label: 'Precio unit.', align: 'right' },
-            { key: 'total', label: 'Total', align: 'right' },
-            { key: 'actions', label: 'Acciones', align: 'right' },
+            { key: 'total',      label: 'Total',        align: 'right' },
+            { key: 'actions',    label: 'Acciones',     align: 'right' },
           ]}
           renderRow={(row) => (
             <tr className="border-b border-mash-surface2 transition hover:bg-mash-bg" key={row.id}>
