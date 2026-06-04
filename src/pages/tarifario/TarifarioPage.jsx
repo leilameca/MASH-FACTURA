@@ -1,6 +1,7 @@
 import { Tag } from 'lucide-react';
 import { CrudModule } from '../../components/features/CrudModule';
 import { tarifarioAreas, tarifarioUnits } from '../../constants/options';
+import { createRow, listRows } from '../../services/crudService';
 
 const areaOptions = tarifarioAreas.map((v) => ({
   value: v,
@@ -8,6 +9,23 @@ const areaOptions = tarifarioAreas.map((v) => ({
 }));
 
 const unitOptions = tarifarioUnits.map((v) => ({ value: v, label: v }));
+
+const areaPrefixes = {
+  tejido: 'TEJ',
+  soldadura: 'SOL',
+  pintura: 'PIN',
+};
+
+async function generateTarifarioCode(area) {
+  const prefix = areaPrefixes[area] ?? area.slice(0, 3).toUpperCase();
+  const existing = await listRows('tarifario', { select: 'code' });
+  const pattern = new RegExp(`^${prefix}-(\\d+)$`);
+  const maxNum = existing.reduce((max, t) => {
+    const match = t.code?.match(pattern);
+    return match ? Math.max(max, parseInt(match[1], 10)) : max;
+  }, 0);
+  return `${prefix}-${String(maxNum + 1).padStart(2, '0')}`;
+}
 
 export function TarifarioPage() {
   return (
@@ -25,7 +43,6 @@ export function TarifarioPage() {
       emptyIcon={Tag}
       emptyTitle="Sin trabajos en el tarifario"
       fields={[
-        { name: 'code', label: 'Código', required: true, placeholder: 'TEJ-01' },
         { name: 'work_name', label: 'Nombre del trabajo', required: true },
         { name: 'area', label: 'Área', type: 'select', options: areaOptions, required: true },
         { name: 'unit', label: 'Unidad', type: 'select', options: unitOptions },
@@ -36,6 +53,10 @@ export function TarifarioPage() {
       filters={[{ name: 'area', options: areaOptions }]}
       getSubtitle={(row) => `${row.code ?? ''} · ${row.area ?? ''}`}
       getTitle={(row) => row.work_name}
+      onCreate={async (payload) => {
+        const code = await generateTarifarioCode(payload.area);
+        await createRow('tarifario', { ...payload, code });
+      }}
       orderBy="area"
       searchColumns={['code', 'work_name', 'area']}
       subtitle="Precios estándar por tipo de trabajo. Solo el admin puede modificarlos."
