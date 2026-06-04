@@ -115,7 +115,11 @@ export function PayrollPage() {
 
   useEffect(() => {
     if (!supabase) return;
-    listRows('orders', { select: 'id, order_number', orderBy: 'created_at', ascending: false })
+    listRows('orders', {
+      select: 'id, order_number, order_type, clients(full_name)',
+      orderBy: 'created_at',
+      ascending: false,
+    })
       .then(setOrders)
       .catch(() => {});
   }, []);
@@ -467,7 +471,9 @@ export function PayrollPage() {
           >
             <option value="">Sin pedido</option>
             {orders.map((o) => (
-              <option key={o.id} value={o.id}>{o.order_number}</option>
+              <option key={o.id} value={o.id}>
+                {[o.order_number, o.clients?.full_name, o.order_type].filter(Boolean).join(' · ')}
+              </option>
             ))}
           </Select>
           <div className="md:col-span-2">
