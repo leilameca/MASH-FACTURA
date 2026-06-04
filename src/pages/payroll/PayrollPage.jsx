@@ -1,11 +1,10 @@
 import { pdf } from '@react-pdf/renderer';
-import { DollarSign, FileDown, Pencil } from 'lucide-react';
+import { ChevronDown, ChevronUp, DollarSign, FileDown } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { PayrollReceiptPdf } from '../../components/documents/PayrollReceiptPdf';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
-import { DataTable } from '../../components/ui/DataTable';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
@@ -15,7 +14,7 @@ import { Textarea } from '../../components/ui/Textarea';
 import { Toast } from '../../components/ui/Toast';
 import { paymentMethods } from '../../constants/options';
 import { supabase } from '../../lib/supabaseClient';
-import { formatCurrency } from '../../lib/utils';
+import { cn, formatCurrency, formatDate } from '../../lib/utils';
 import { createRow, listRows } from '../../services/crudService';
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
@@ -29,8 +28,7 @@ function periodRange(period) {
   const [year, month] = period.split('-').map(Number);
   const start = `${year}-${String(month).padStart(2, '0')}-01`;
   const lastDay = new Date(year, month, 0).getDate();
-  const end = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-  return { start, end };
+  return { start, end: `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}` };
 }
 
 function fmtPeriod(periodKey) {
@@ -39,71 +37,36 @@ function fmtPeriod(periodKey) {
     .toLocaleDateString('es-DO', { month: 'long', year: 'numeric' });
 }
 
-const METHOD_LABELS = Object.fromEntries(
-  paymentMethods.map((m) => [m, m.charAt(0).toUpperCase() + m.slice(1)])
-);
+const METHOD_LABELS = { efectivo: 'Efectivo', transferencia: 'Transferencia', tarjeta: 'Tarjeta', qik: 'Qik', cheque: 'Cheque', otro: 'Otro' };
 
 export function PayrollPage() {
   const [period, setPeriod] = useState(currentPeriod);
-  const [summary, setSummary] = useState([]);
+  const [records, setRecords] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [toast, setToast] = useState(null);
+  const [expanded, setExpanded] = useState({});
 
-  // Adjustment modal
-  const [adjEditing, setAdjEditing] = useState(null);
-  const [adjForm, setAdjForm] = useState({ bonus: '', discount: '', notes: '' });
-
-  // Payment modal
-  const [payEditing, setPayEditing] = useState(null);
-  const [payForm, setPayForm] = useState({ amount: '', payment_method: 'efectivo', payment_date: todayStr(), order_id: '', notes: '' });
+  // Pay modal
+  const [payModal, setPayModal] = useState(null); // { employee, unpaidRecords }
+  const [selected, setSelected] = useState(new Set());
+  const [payForm, setPayForm] = useState({ payment_method: 'efectivo', payment_date: todayStr(), order_id: '', notes: '' });
 
   const load = useCallback(async () => {
     if (!supabase) return;
     setLoading(true);
     try {
       const { start, end } = periodRange(period);
-
-      const [{ data: records, error: recErr }, { data: adjustments, error: adjErr }, { data: payments, error: payErr }] = await Promise.all([
-        supabase
-          .from('production_records')
-          .select('employee_id, total, employees(id, name, area, employee_id)')
-          .gte('date', start)
-          .lte('date', end),
-        supabase.from('payroll_adjustments').select('*').eq('period_key', period),
-        supabase.from('payroll_payments').select('*, orders(order_number)').eq('period_key', period),
-      ]);
-
-      if (recErr) throw recErr;
-      if (adjErr) throw adjErr;
-      if (payErr) throw payErr;
-
-      const map = {};
-      for (const r of records ?? []) {
-        const emp = r.employees;
-        if (!emp) continue;
-        if (!map[emp.id]) map[emp.id] = { employee: emp, production: 0 };
-        map[emp.id].production += Number(r.total || 0);
-      }
-
-      const adjMap = {};
-      for (const a of adjustments ?? []) adjMap[a.employee_id] = a;
-
-      const payMap = {};
-      for (const p of payments ?? []) payMap[p.employee_id] = p;
-
-      const rows = Object.values(map)
-        .map((item) => {
-          const adj = adjMap[item.employee.id] ?? { bonus: 0, discount: 0, notes: '' };
-          const net = item.production + Number(adj.bonus || 0) - Number(adj.discount || 0);
-          const payment = payMap[item.employee.id] ?? null;
-          return { ...item, adj, net, payment };
-        })
-        .sort((a, b) => a.employee.name.localeCompare(b.employee.name));
-
-      setSummary(rows);
+      const { data, error } = await supabase
+        .from('production_records')
+        .select('*, employees(id, name, area, employee_id), tarifario(work_name, unit, area), payroll_payments(id, payment_method, payment_date, amount, orders(order_number))')
+        .gte('date', start)
+        .lte('date', end)
+        .order('date', { ascending: false });
+      if (error) throw error;
+      setRecords(data ?? []);
     } catch (err) {
       setToast({ type: 'error', message: err.message });
     } finally {
@@ -115,105 +78,87 @@ export function PayrollPage() {
 
   useEffect(() => {
     if (!supabase) return;
-    listRows('orders', {
-      select: 'id, order_number, order_type, clients(full_name)',
-      orderBy: 'created_at',
-      ascending: false,
-    })
-      .then(setOrders)
-      .catch(() => {});
+    listRows('orders', { select: 'id, order_number, order_type, clients(full_name)', orderBy: 'created_at', ascending: false })
+      .then(setOrders).catch(() => {});
   }, []);
 
-  // ── Adjustment ──────────────────────────────────────────────────────────────
+  // Group records by employee
+  const byEmployee = records.reduce((map, r) => {
+    const emp = r.employees;
+    if (!emp) return map;
+    if (!map[emp.id]) map[emp.id] = { employee: emp, records: [] };
+    map[emp.id].records.push(r);
+    return map;
+  }, {});
 
-  function openAdj(row) {
-    setAdjForm({ bonus: String(row.adj?.bonus ?? 0), discount: String(row.adj?.discount ?? 0), notes: row.adj?.notes ?? '' });
-    setAdjEditing(row);
+  const employeeGroups = Object.values(byEmployee)
+    .sort((a, b) => a.employee.name.localeCompare(b.employee.name));
+
+  // Stats
+  const totalProduction = records.reduce((s, r) => s + Number(r.total || 0), 0);
+  const totalPaid = records.filter((r) => r.payment_id).reduce((s, r) => s + Number(r.total || 0), 0);
+  const totalPending = totalProduction - totalPaid;
+
+  // Pay modal helpers
+  function openPayModal(group) {
+    const unpaid = group.records.filter((r) => !r.payment_id);
+    setSelected(new Set(unpaid.map((r) => r.id)));
+    setPayForm({ payment_method: 'efectivo', payment_date: todayStr(), order_id: '', notes: '' });
+    setPayModal({ employee: group.employee, unpaidRecords: unpaid });
   }
 
-  async function handleSaveAdj() {
-    if (!adjEditing) return;
-    setSaving(true);
-    try {
-      const { error } = await supabase
-        .from('payroll_adjustments')
-        .upsert(
-          { employee_id: adjEditing.employee.id, period_key: period, bonus: Number(adjForm.bonus || 0), discount: Number(adjForm.discount || 0), notes: adjForm.notes || null },
-          { onConflict: 'employee_id,period_key' },
-        );
-      if (error) throw error;
-      setToast({ type: 'success', message: 'Ajustes guardados.' });
-      setAdjEditing(null);
-      await load();
-    } catch (err) {
-      setToast({ type: 'error', message: err.message });
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  // ── Payment ──────────────────────────────────────────────────────────────────
-
-  function openPay(row) {
-    const existing = row.payment;
-    setPayForm({
-      amount: existing ? String(existing.amount) : String(Math.round(row.net * 100) / 100),
-      payment_method: existing?.payment_method ?? 'efectivo',
-      payment_date: existing?.payment_date ?? todayStr(),
-      order_id: existing?.order_id ?? '',
-      notes: existing?.notes ?? '',
+  function toggleRecord(id) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
     });
-    setPayEditing(row);
   }
 
-  async function handleSavePay() {
-    if (!payEditing) return;
-    if (!payForm.amount || Number(payForm.amount) <= 0) {
-      setToast({ type: 'error', message: 'Ingresa un monto válido.' });
+  const selectedRecords = payModal?.unpaidRecords.filter((r) => selected.has(r.id)) ?? [];
+  const selectedTotal = selectedRecords.reduce((s, r) => s + Number(r.total || 0), 0);
+
+  async function handlePay() {
+    if (!payModal || selected.size === 0) {
+      setToast({ type: 'error', message: 'Selecciona al menos un trabajo.' });
       return;
     }
     setSaving(true);
     try {
-      const { employee, production, adj, net } = payEditing;
+      const { employee } = payModal;
 
-      // Create or update expense record
-      const expensePayload = {
+      // Create expense
+      const expense = await createRow('expenses', {
         category: 'nomina',
-        description: `Nómina ${fmtPeriod(period)} — ${employee.name}`,
-        amount: Number(payForm.amount),
+        description: `Pago trabajos ${fmtPeriod(period)} — ${employee.name}`,
+        amount: selectedTotal,
         payment_method: payForm.payment_method,
         expense_date: payForm.payment_date,
         notes: payForm.notes || null,
-      };
+      });
 
-      let expenseId = payEditing.payment?.expense_id ?? null;
-      if (expenseId) {
-        await supabase.from('expenses').update(expensePayload).eq('id', expenseId);
-      } else {
-        const expense = await createRow('expenses', expensePayload);
-        expenseId = expense.id;
-      }
+      // Create payroll_payment
+      const payment = await createRow('payroll_payments', {
+        employee_id: employee.id,
+        period_key: period,
+        amount: selectedTotal,
+        payment_method: payForm.payment_method,
+        payment_date: payForm.payment_date,
+        order_id: payForm.order_id || null,
+        expense_id: expense.id,
+        notes: payForm.notes || null,
+      });
 
-      // Upsert payment record
+      // Mark selected records as paid
+      const ids = Array.from(selected);
       const { error } = await supabase
-        .from('payroll_payments')
-        .upsert(
-          {
-            employee_id: employee.id,
-            period_key: period,
-            amount: Number(payForm.amount),
-            payment_method: payForm.payment_method,
-            payment_date: payForm.payment_date,
-            order_id: payForm.order_id || null,
-            expense_id: expenseId,
-            notes: payForm.notes || null,
-          },
-          { onConflict: 'employee_id,period_key' },
-        );
+        .from('production_records')
+        .update({ payment_id: payment.id })
+        .in('id', ids);
       if (error) throw error;
 
-      setToast({ type: 'success', message: 'Pago registrado y sumado a gastos.' });
-      setPayEditing(null);
+      setToast({ type: 'success', message: `${ids.length} trabajo(s) pagado(s). Gasto registrado.` });
+      setPayModal(null);
       await load();
     } catch (err) {
       setToast({ type: 'error', message: err.message });
@@ -222,19 +167,19 @@ export function PayrollPage() {
     }
   }
 
-  async function handlePrintReceipt(row) {
-    if (!row.payment) return;
+  async function handleReceipt(payment, employee, paidRecords) {
     setGeneratingPdf(true);
     try {
       const blob = await pdf(
         <PayrollReceiptPdf
-          bonus={Number(row.adj?.bonus || 0)}
-          discount={Number(row.adj?.discount || 0)}
-          employee={row.employee}
-          net={row.net}
-          payment={{ ...row.payment, order_number: row.payment?.orders?.order_number }}
+          bonus={0}
+          discount={0}
+          employee={employee}
+          net={payment.amount}
+          payment={{ ...payment, order_number: payment.orders?.order_number }}
           period={period}
-          production={row.production}
+          production={payment.amount}
+          records={paidRecords}
         />
       ).toBlob();
       window.open(URL.createObjectURL(blob), '_blank');
@@ -245,21 +190,13 @@ export function PayrollPage() {
     }
   }
 
-  const totalNomina = summary.reduce((sum, r) => sum + r.net, 0);
-  const totalPagado = summary.filter((r) => r.payment).reduce((sum, r) => sum + Number(r.payment?.amount || 0), 0);
-  const pendienteCount = summary.filter((r) => !r.payment).length;
-
-  const adjPreviewNet = adjEditing
-    ? (adjEditing.production ?? 0) + Number(adjForm.bonus || 0) - Number(adjForm.discount || 0)
-    : 0;
-
   return (
     <div className="space-y-6">
       <Toast message={toast?.message} type={toast?.type} />
 
       <PageHeader
-        count={summary.length ? `${summary.length} empleados` : undefined}
-        subtitle="Resumen de producción, pagos y estado por período."
+        count={employeeGroups.length ? `${employeeGroups.length} empleados` : undefined}
+        subtitle="Pagos individuales por trabajo realizado."
         title="Nómina"
       />
 
@@ -273,24 +210,24 @@ export function PayrollPage() {
         />
       </div>
 
-      {summary.length > 0 && (
+      {records.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-3">
           <Card className="flex flex-col gap-1 p-4">
-            <span className="text-xs text-mash-text3">Total nómina</span>
-            <span className="font-mono text-lg font-bold text-mash-brand">{formatCurrency(totalNomina)}</span>
+            <span className="text-xs text-mash-text3">Total producción</span>
+            <span className="font-mono text-lg font-bold text-mash-text1">{formatCurrency(totalProduction)}</span>
           </Card>
           <Card className="flex flex-col gap-1 p-4">
             <span className="text-xs text-mash-text3">Total pagado</span>
-            <span className="font-mono text-lg font-bold text-green-700">{formatCurrency(totalPagado)}</span>
+            <span className="font-mono text-lg font-bold text-green-700">{formatCurrency(totalPaid)}</span>
           </Card>
           <Card className="flex flex-col gap-1 p-4">
-            <span className="text-xs text-mash-text3">Pendientes de pago</span>
-            <span className="font-mono text-lg font-bold text-amber-600">{pendienteCount} empleado{pendienteCount !== 1 ? 's' : ''}</span>
+            <span className="text-xs text-mash-text3">Pendiente de pago</span>
+            <span className="font-mono text-lg font-bold text-amber-600">{formatCurrency(totalPending)}</span>
           </Card>
         </div>
       )}
 
-      {!loading && !summary.length && (
+      {!loading && !employeeGroups.length && (
         <EmptyState
           description="No hay registros de producción para este período."
           icon={DollarSign}
@@ -298,215 +235,226 @@ export function PayrollPage() {
         />
       )}
 
-      {/* Mobile cards */}
-      <div className="space-y-3 md:hidden">
-        {summary.map((row) => (
-          <Card className="p-4" key={row.employee.id}>
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="text-[15px] font-semibold text-mash-text1">{row.employee.name}</p>
-                  <StatusBadge paid={Boolean(row.payment)} />
-                </div>
-                <p className="text-[13px] text-mash-text3">{row.employee.area} · {row.employee.employee_id}</p>
-                <div className="mt-2 space-y-0.5 text-[13px] text-mash-text3">
-                  <p>Producción: <span className="font-medium text-mash-text2">{formatCurrency(row.production)}</span></p>
-                  {Number(row.adj?.bonus) > 0 && <p>Bono: <span className="font-medium text-green-700">+{formatCurrency(row.adj.bonus)}</span></p>}
-                  {Number(row.adj?.discount) > 0 && <p>Descuento: <span className="font-medium text-red-700">−{formatCurrency(row.adj.discount)}</span></p>}
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="font-mono text-[17px] font-bold text-mash-brand">{formatCurrency(row.net)}</p>
-                <div className="mt-2 flex flex-col gap-1.5">
-                  <ActionBtn label={row.payment ? 'Editar pago' : 'Pagar'} onClick={() => openPay(row)} primary={!row.payment} />
-                  {row.payment && <ActionBtn icon={FileDown} label="Comprobante" onClick={() => handlePrintReceipt(row)} />}
-                  <ActionBtn label="Ajustes" onClick={() => openAdj(row)} />
-                </div>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+      <div className="space-y-3">
+        {employeeGroups.map((group) => {
+          const unpaid = group.records.filter((r) => !r.payment_id);
+          const paid = group.records.filter((r) => r.payment_id);
+          const unpaidTotal = unpaid.reduce((s, r) => s + Number(r.total || 0), 0);
+          const paidTotal = paid.reduce((s, r) => s + Number(r.total || 0), 0);
+          const isOpen = expanded[group.employee.id];
 
-      {summary.length > 0 && (
-        <DataTable
-          columns={[
-            { key: 'employee',   label: 'Empleado' },
-            { key: 'area',       label: 'Área' },
-            { key: 'production', label: 'Producción',  align: 'right' },
-            { key: 'bonus',      label: 'Bono',        align: 'right' },
-            { key: 'discount',   label: 'Descuento',   align: 'right' },
-            { key: 'net',        label: 'Neto',        align: 'right' },
-            { key: 'status',     label: 'Estado',      align: 'center' },
-            { key: 'actions',    label: '',            align: 'right' },
-          ]}
-          renderRow={(row) => (
-            <tr className="border-b border-mash-surface2 transition hover:bg-mash-bg" key={row.employee.id}>
-              <td className="px-4 py-4">
-                <p className="text-sm font-medium text-mash-text1">{row.employee.name}</p>
-                <p className="text-xs text-mash-text3">{row.employee.employee_id}</p>
-              </td>
-              <td className="px-4 py-4 text-sm capitalize text-mash-text2">{row.employee.area}</td>
-              <td className="px-4 py-4 text-right font-mono text-sm text-mash-text2">{formatCurrency(row.production)}</td>
-              <td className="px-4 py-4 text-right font-mono text-sm text-green-700">
-                {Number(row.adj?.bonus) > 0 ? `+${formatCurrency(row.adj.bonus)}` : '—'}
-              </td>
-              <td className="px-4 py-4 text-right font-mono text-sm text-red-700">
-                {Number(row.adj?.discount) > 0 ? `−${formatCurrency(row.adj.discount)}` : '—'}
-              </td>
-              <td className="px-4 py-4 text-right font-mono text-sm font-bold text-mash-brand">{formatCurrency(row.net)}</td>
-              <td className="px-4 py-4 text-center">
-                <StatusBadge paid={Boolean(row.payment)} />
-              </td>
-              <td className="px-4 py-4 text-right">
-                <div className="flex justify-end gap-1">
-                  {row.payment && (
-                    <button
-                      className="flex items-center gap-1 rounded-[8px] border border-mash-borderMd px-2.5 py-1.5 text-xs font-medium text-mash-text2 hover:bg-mash-bg"
-                      onClick={() => handlePrintReceipt(row)}
-                      type="button"
-                    >
-                      <FileDown className="h-3 w-3" />
-                    </button>
+          // Group paid records by payment
+          const paymentGroups = paid.reduce((map, r) => {
+            const pid = r.payment_id;
+            if (!map[pid]) map[pid] = { payment: r.payroll_payments, records: [] };
+            map[pid].records.push(r);
+            return map;
+          }, {});
+
+          return (
+            <Card key={group.employee.id} className="overflow-hidden">
+              {/* Employee header */}
+              <div className="flex items-center justify-between gap-4 p-4">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-semibold text-mash-text1">{group.employee.name}</p>
+                  <p className="text-[13px] text-mash-text3">{group.employee.employee_id} · {group.employee.area}</p>
+                  <div className="mt-2 flex flex-wrap gap-3 text-[13px]">
+                    {unpaid.length > 0 && (
+                      <span className="text-amber-700">
+                        {unpaid.length} pendiente{unpaid.length !== 1 ? 's' : ''} · <span className="font-semibold">{formatCurrency(unpaidTotal)}</span>
+                      </span>
+                    )}
+                    {paid.length > 0 && (
+                      <span className="text-green-700">
+                        {paid.length} pagado{paid.length !== 1 ? 's' : ''} · <span className="font-semibold">{formatCurrency(paidTotal)}</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+                  {unpaid.length > 0 && (
+                    <Button icon={DollarSign} onClick={() => openPayModal(group)} size="sm">
+                      Pagar trabajos
+                    </Button>
                   )}
                   <button
                     className="flex items-center gap-1 rounded-[8px] border border-mash-borderMd px-2.5 py-1.5 text-xs font-medium text-mash-text2 hover:bg-mash-bg"
-                    onClick={() => openAdj(row)}
+                    onClick={() => setExpanded((e) => ({ ...e, [group.employee.id]: !e[group.employee.id] }))}
                     type="button"
                   >
-                    <Pencil className="h-3 w-3" /> Ajustes
-                  </button>
-                  <button
-                    className={`flex items-center gap-1 rounded-[8px] px-2.5 py-1.5 text-xs font-semibold ${row.payment ? 'border border-mash-borderMd text-mash-text2 hover:bg-mash-bg' : 'bg-mash-brand text-white hover:opacity-90'}`}
-                    onClick={() => openPay(row)}
-                    type="button"
-                  >
-                    <DollarSign className="h-3 w-3" /> {row.payment ? 'Editar pago' : 'Pagar'}
+                    {isOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    {isOpen ? 'Ocultar' : 'Ver trabajos'}
                   </button>
                 </div>
-              </td>
-            </tr>
-          )}
-          rows={summary}
-        />
-      )}
+              </div>
 
-      {/* Adjustment modal */}
+              {/* Expanded records */}
+              {isOpen && (
+                <div className="border-t border-mash-border">
+                  {/* Pending records */}
+                  {unpaid.length > 0 && (
+                    <div>
+                      <p className="bg-amber-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+                        Pendientes de pago
+                      </p>
+                      {unpaid.map((r) => (
+                        <RecordRow key={r.id} record={r} />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Paid records grouped by payment */}
+                  {Object.values(paymentGroups).map(({ payment, records: paidRecs }) => (
+                    <div key={payment?.id ?? 'unknown'}>
+                      <div className="flex items-center justify-between bg-green-50 px-4 py-2">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-green-700">
+                          Pagado el {payment?.payment_date ? formatDate(payment.payment_date + 'T00:00:00') : '—'} · {METHOD_LABELS[payment?.payment_method] ?? payment?.payment_method} · {formatCurrency(payment?.amount ?? 0)}
+                        </p>
+                        {payment && (
+                          <button
+                            className="flex items-center gap-1 rounded-[6px] border border-green-200 px-2 py-1 text-[11px] font-medium text-green-700 hover:bg-green-100"
+                            onClick={() => handleReceipt(payment, group.employee, paidRecs)}
+                            type="button"
+                          >
+                            <FileDown className="h-3 w-3" /> Comprobante
+                          </button>
+                        )}
+                      </div>
+                      {paidRecs.map((r) => (
+                        <RecordRow key={r.id} record={r} paid />
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Pay modal */}
       <Modal
         footer={(
           <>
-            <Button className="w-full md:w-auto" disabled={saving} onClick={() => setAdjEditing(null)} variant="secondary">Cancelar</Button>
-            <Button className="w-full md:w-auto" loading={saving} onClick={handleSaveAdj}>Guardar ajustes</Button>
-          </>
-        )}
-        onClose={() => setAdjEditing(null)}
-        open={adjEditing !== null}
-        title={`Ajustes — ${adjEditing?.employee?.name ?? ''}`}
-      >
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="flex flex-col justify-center rounded-[10px] border border-mash-borderMd bg-mash-bg px-4 py-3 md:col-span-2">
-            <p className="text-[12px] font-medium text-mash-text3">Producción del período</p>
-            <p className="mt-1 font-mono text-[20px] font-bold text-mash-text1">{formatCurrency(adjEditing?.production ?? 0)}</p>
-          </div>
-          <Input label="Bono (RD$)" min="0" onChange={(e) => setAdjForm((f) => ({ ...f, bonus: e.target.value }))} step="0.01" type="number" value={adjForm.bonus} />
-          <Input label="Descuento (RD$)" min="0" onChange={(e) => setAdjForm((f) => ({ ...f, discount: e.target.value }))} step="0.01" type="number" value={adjForm.discount} />
-          <div className="flex flex-col justify-center rounded-[10px] border border-mash-brand/40 bg-mash-brand/5 px-4 py-3 md:col-span-2">
-            <p className="text-[12px] font-medium text-mash-text3">Neto a pagar</p>
-            <p className="mt-1 font-mono text-[22px] font-bold text-mash-brand">{formatCurrency(adjPreviewNet)}</p>
-          </div>
-          <div className="md:col-span-2">
-            <Textarea label="Notas" onChange={(e) => setAdjForm((f) => ({ ...f, notes: e.target.value }))} value={adjForm.notes} />
-          </div>
-        </div>
-      </Modal>
-
-      {/* Payment modal */}
-      <Modal
-        footer={(
-          <>
-            <Button className="w-full md:w-auto" disabled={saving} onClick={() => setPayEditing(null)} variant="secondary">Cancelar</Button>
-            <Button className="w-full md:w-auto" loading={saving} onClick={handleSavePay}>
-              {payEditing?.payment ? 'Actualizar pago' : 'Registrar pago'}
+            <Button className="w-full md:w-auto" disabled={saving} onClick={() => setPayModal(null)} variant="secondary">Cancelar</Button>
+            <Button className="w-full md:w-auto" disabled={selected.size === 0} loading={saving} onClick={handlePay}>
+              Pagar {selected.size > 0 ? `(${selected.size})` : ''}
             </Button>
           </>
         )}
-        onClose={() => setPayEditing(null)}
-        open={payEditing !== null}
+        onClose={() => setPayModal(null)}
+        open={payModal !== null}
         size="lg"
-        title={`Pago — ${payEditing?.employee?.name ?? ''}`}
+        title={`Pagar trabajos — ${payModal?.employee?.name ?? ''}`}
       >
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="flex flex-col justify-center rounded-[10px] border border-mash-borderMd bg-mash-bg px-4 py-3 md:col-span-2">
-            <p className="text-[12px] font-medium text-mash-text3">Neto a pagar según nómina</p>
-            <p className="mt-1 font-mono text-[20px] font-bold text-mash-text1">{formatCurrency(payEditing?.net ?? 0)}</p>
+        <div className="space-y-4">
+          {/* Work checklist */}
+          <div className="rounded-[10px] border border-mash-borderMd overflow-hidden">
+            <div className="flex items-center justify-between bg-mash-bg px-4 py-2.5">
+              <span className="text-[12px] font-semibold text-mash-text2">Selecciona los trabajos a pagar</span>
+              <button
+                className="text-[12px] font-medium text-mash-brand hover:underline"
+                onClick={() => {
+                  const allIds = new Set(payModal?.unpaidRecords.map((r) => r.id));
+                  setSelected(selected.size === allIds.size ? new Set() : allIds);
+                }}
+                type="button"
+              >
+                {selected.size === payModal?.unpaidRecords.length ? 'Deseleccionar todo' : 'Seleccionar todo'}
+              </button>
+            </div>
+            {payModal?.unpaidRecords.map((r) => (
+              <label
+                className={cn(
+                  'flex cursor-pointer items-center gap-3 border-t border-mash-border px-4 py-3 transition hover:bg-mash-bg',
+                  selected.has(r.id) && 'bg-mash-brand/5',
+                )}
+                key={r.id}
+              >
+                <input
+                  checked={selected.has(r.id)}
+                  className="h-4 w-4 accent-mash-brand"
+                  onChange={() => toggleRecord(r.id)}
+                  type="checkbox"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-mash-text1">{r.tarifario?.work_name}</p>
+                  <p className="text-xs text-mash-text3">{formatDate(r.date + 'T00:00:00')} · {r.quantity} × {formatCurrency(r.unit_price)}</p>
+                </div>
+                <span className="font-mono text-sm font-semibold text-mash-text1">{formatCurrency(r.total)}</span>
+              </label>
+            ))}
           </div>
-          <Input
-            label="Monto a pagar (RD$)"
-            min="0.01"
-            onChange={(e) => setPayForm((f) => ({ ...f, amount: e.target.value }))}
-            required
-            step="0.01"
-            type="number"
-            value={payForm.amount}
-          />
-          <Select
-            label="Método de pago"
-            onChange={(e) => setPayForm((f) => ({ ...f, payment_method: e.target.value }))}
-            value={payForm.payment_method}
-          >
-            {paymentMethods.map((m) => (
-              <option key={m} value={m}>{METHOD_LABELS[m] ?? m}</option>
-            ))}
-          </Select>
-          <Input
-            label="Fecha de pago"
-            onChange={(e) => setPayForm((f) => ({ ...f, payment_date: e.target.value }))}
-            type="date"
-            value={payForm.payment_date}
-          />
-          <Select
-            label="Vincular a pedido (opcional)"
-            onChange={(e) => setPayForm((f) => ({ ...f, order_id: e.target.value }))}
-            value={payForm.order_id}
-          >
-            <option value="">Sin pedido</option>
-            {orders.map((o) => (
-              <option key={o.id} value={o.id}>
-                {[o.order_number, o.clients?.full_name, o.order_type].filter(Boolean).join(' · ')}
-              </option>
-            ))}
-          </Select>
-          <div className="md:col-span-2">
-            <Textarea
-              label="Notas (opcional)"
-              onChange={(e) => setPayForm((f) => ({ ...f, notes: e.target.value }))}
-              value={payForm.notes}
+
+          {/* Selected total */}
+          <div className="flex items-center justify-between rounded-[10px] border border-mash-brand/40 bg-mash-brand/5 px-4 py-3">
+            <span className="text-[13px] font-medium text-mash-text3">Total a pagar</span>
+            <span className="font-mono text-[20px] font-bold text-mash-brand">{formatCurrency(selectedTotal)}</span>
+          </div>
+
+          {/* Payment details */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <Select
+              label="Método de pago"
+              onChange={(e) => setPayForm((f) => ({ ...f, payment_method: e.target.value }))}
+              value={payForm.payment_method}
+            >
+              {paymentMethods.map((m) => (
+                <option key={m} value={m}>{METHOD_LABELS[m] ?? m}</option>
+              ))}
+            </Select>
+            <Input
+              label="Fecha de pago"
+              onChange={(e) => setPayForm((f) => ({ ...f, payment_date: e.target.value }))}
+              type="date"
+              value={payForm.payment_date}
             />
+            <Select
+              label="Vincular a pedido (opcional)"
+              onChange={(e) => setPayForm((f) => ({ ...f, order_id: e.target.value }))}
+              value={payForm.order_id}
+            >
+              <option value="">Sin pedido</option>
+              {orders.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {[o.order_number, o.clients?.full_name, o.order_type].filter(Boolean).join(' · ')}
+                </option>
+              ))}
+            </Select>
+            <div className="md:col-span-2">
+              <Textarea
+                label="Notas (opcional)"
+                onChange={(e) => setPayForm((f) => ({ ...f, notes: e.target.value }))}
+                value={payForm.notes}
+              />
+            </div>
           </div>
-          <div className="rounded-[10px] border border-amber-200 bg-amber-50 px-4 py-3 text-[13px] text-amber-800 md:col-span-2">
-            Este pago se registrará automáticamente como gasto de nómina en la sección de Gastos.
-          </div>
+
+          <p className="rounded-[8px] border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-800">
+            Este pago se registrará automáticamente como gasto en la sección de Gastos.
+          </p>
         </div>
       </Modal>
     </div>
   );
 }
 
-function StatusBadge({ paid }) {
-  return paid
-    ? <Badge variant="olive">Pagado</Badge>
-    : <Badge variant="warning">Pendiente</Badge>;
-}
-
-function ActionBtn({ label, onClick, primary = false, icon: Icon }) {
+function RecordRow({ record, paid = false }) {
   return (
-    <button
-      className={`flex items-center justify-center gap-1 rounded-[8px] px-2.5 py-1.5 text-xs font-medium ${primary ? 'bg-mash-brand text-white hover:opacity-90' : 'border border-mash-borderMd text-mash-text2 hover:bg-mash-bg'}`}
-      onClick={onClick}
-      type="button"
-    >
-      {Icon && <Icon className="h-3 w-3" />}
-      {label}
-    </button>
+    <div className={cn('flex items-center justify-between px-4 py-3 border-t border-mash-border', paid && 'opacity-60')}>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-mash-text1">{record.tarifario?.work_name}</p>
+        <p className="text-xs text-mash-text3">
+          {formatDate(record.date + 'T00:00:00')} · {record.quantity} × {formatCurrency(record.unit_price)}
+        </p>
+      </div>
+      <div className="flex items-center gap-3">
+        <span className="font-mono text-sm font-semibold text-mash-text1">{formatCurrency(record.total)}</span>
+        {paid
+          ? <Badge variant="olive">Pagado</Badge>
+          : <Badge variant="warning">Pendiente</Badge>
+        }
+      </div>
+    </div>
   );
 }

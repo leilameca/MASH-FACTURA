@@ -100,7 +100,7 @@ function fmtPeriod(periodKey) {
     .toLocaleDateString('es-DO', { month: 'long', year: 'numeric' });
 }
 
-export function PayrollReceiptPdf({ employee, period, production, bonus, discount, net, payment }) {
+export function PayrollReceiptPdf({ employee, period, production, bonus, discount, net, payment, records = [] }) {
   const receiptNumber = `NOM-${period.replace('-', '')}-${employee.employee_id}`;
 
   return (
@@ -139,16 +139,32 @@ export function PayrollReceiptPdf({ employee, period, production, bonus, discoun
           </View>
         </View>
 
-        {/* Summary table */}
+        {/* Work records table */}
         <View style={s.sumTable}>
           <View style={s.sumHead}>
-            <Text style={[s.th, s.colConcept]}>Concepto</Text>
-            <Text style={[s.th, s.colAmount]}>Monto</Text>
+            <Text style={[s.th, s.colConcept]}>Trabajo</Text>
+            <Text style={[s.th, { width: 40, textAlign: 'right' }]}>Cant.</Text>
+            <Text style={[s.th, { width: 70, textAlign: 'right' }]}>Precio</Text>
+            <Text style={[s.th, s.colAmount]}>Total</Text>
           </View>
-          <View style={s.sumRow}>
-            <Text style={[s.td, s.colConcept]}>Producción del período</Text>
-            <Text style={[s.td, s.colAmount]}>{formatCurrency(production)}</Text>
-          </View>
+          {records.length > 0
+            ? records.map((r) => (
+              <View key={r.id} style={s.sumRow}>
+                <View style={s.colConcept}>
+                  <Text style={s.td}>{r.tarifario?.work_name ?? '—'}</Text>
+                  <Text style={s.tdMuted}>{r.date}</Text>
+                </View>
+                <Text style={[s.td, { width: 40, textAlign: 'right' }]}>{r.quantity}</Text>
+                <Text style={[s.td, { width: 70, textAlign: 'right', fontFamily: 'Courier' }]}>{formatCurrency(r.unit_price)}</Text>
+                <Text style={[s.td, s.colAmount]}>{formatCurrency(r.total)}</Text>
+              </View>
+            ))
+            : (
+              <View style={s.sumRow}>
+                <Text style={[s.td, s.colConcept]}>Trabajos del período</Text>
+                <Text style={[s.td, s.colAmount]}>{formatCurrency(production)}</Text>
+              </View>
+            )}
           {bonus > 0 && (
             <View style={s.sumRowAlt}>
               <Text style={[s.td, s.colConcept]}>Bono</Text>
