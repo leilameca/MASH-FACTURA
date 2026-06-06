@@ -91,6 +91,7 @@ export function ProductionPage() {
   const [endDate, setEndDate] = useState(todayStr);
   const [filterEmployee, setFilterEmployee] = useState('');
   const [form, setForm] = useState(emptyForm());
+  const [taxId, setTaxId] = useState('');
 
   const load = useCallback(async () => {
     if (!supabase) return;
@@ -121,6 +122,8 @@ export function ProductionPage() {
     ])
       .then(([emps, tar]) => { setEmployees(emps); setTarifario(tar); })
       .catch(() => {});
+    supabase.from('business_settings').select('tax_id').limit(1).maybeSingle()
+      .then(({ data }) => { if (data?.tax_id) setTaxId(data.tax_id); });
   }, []);
 
   function applyPreset(key) {
@@ -209,6 +212,7 @@ export function ProductionPage() {
           employeeName={empName}
           records={filtered}
           startDate={startDate}
+          taxId={taxId}
         />
       ).toBlob();
       const url = URL.createObjectURL(blob);

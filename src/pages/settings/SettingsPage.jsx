@@ -13,7 +13,7 @@ import { isSupabaseConfigured, supabase } from '../../lib/supabaseClient';
 const DEFAULT_SETTINGS = {
   business_name: 'Martinez Star Home',
   brand_name: 'MASH',
-  tax_id: '',
+  tax_id: '40211435280',
   email: '',
   phone: '',
   whatsapp: '',

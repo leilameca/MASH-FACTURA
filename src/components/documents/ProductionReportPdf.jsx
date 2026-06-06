@@ -86,7 +86,7 @@ function groupByEmployee(records) {
   return Object.values(map).sort((a, b) => a.employee.name.localeCompare(b.employee.name));
 }
 
-export function ProductionReportPdf({ records, startDate, endDate, employeeName }) {
+export function ProductionReportPdf({ records, startDate, endDate, employeeName, taxId }) {
   const groups = groupByEmployee(records);
   const grandTotal = records.reduce((sum, r) => sum + Number(r.total || 0), 0);
   const generatedAt = new Date().toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -170,7 +170,7 @@ export function ProductionReportPdf({ records, startDate, endDate, employeeName 
         <View fixed style={s.footer}>
           <View style={s.footerLine} />
           <View style={s.footerRow}>
-            <Text style={s.footerText}>Martinez Star Home · RNC 130-77604-2</Text>
+            <Text style={s.footerText}>Martinez Star Home{taxId ? ` · ${taxId}` : ''}</Text>
             <Text style={s.footerText} render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`} />
           </View>
         </View>

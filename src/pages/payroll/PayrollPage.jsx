@@ -48,6 +48,7 @@ export function PayrollPage() {
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [toast, setToast] = useState(null);
   const [expanded, setExpanded] = useState({});
+  const [taxId, setTaxId] = useState('');
 
   // Pay modal
   const [payModal, setPayModal] = useState(null); // { employee, unpaidRecords }
@@ -75,6 +76,12 @@ export function PayrollPage() {
   }, [period]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.from('business_settings').select('tax_id').limit(1).maybeSingle()
+      .then(({ data }) => { if (data?.tax_id) setTaxId(data.tax_id); });
+  }, []);
 
   useEffect(() => {
     if (!supabase) return;
@@ -180,6 +187,7 @@ export function PayrollPage() {
           period={period}
           production={payment.amount}
           records={paidRecords}
+          taxId={taxId}
         />
       ).toBlob();
       window.open(URL.createObjectURL(blob), '_blank');

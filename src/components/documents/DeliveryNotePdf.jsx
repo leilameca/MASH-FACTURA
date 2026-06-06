@@ -55,7 +55,6 @@ const COMPANY = {
   instagram: '@martinez_star_home',
   email: 'Martinezstarhome@gmail.com',
   address: 'Calle 10 Gurabo, Santiago, R.D.',
-  rnc: 'RNC 130-77604-2',
 };
 
 function formatPdfDate(dateStr) {
@@ -64,7 +63,7 @@ function formatPdfDate(dateStr) {
   return d.toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-export function DeliveryNotePdf({ order, client, items = [] }) {
+export function DeliveryNotePdf({ order, client, items = [], taxId }) {
   const number = order?.order_number || `PED-${order?.id?.slice(0, 6) || '000'}`;
   const deliveryNumber = `ENT-${number.replace(/[^0-9]/g, '') || number}`;
 
@@ -87,7 +86,7 @@ export function DeliveryNotePdf({ order, client, items = [] }) {
           <Text style={s.contactItem}>{COMPANY.instagram}</Text>
           <Text style={s.contactItem}>{COMPANY.email}</Text>
           <Text style={s.contactItem}>{COMPANY.address}</Text>
-          <Text style={s.contactItem}>{COMPANY.rnc}</Text>
+          {taxId ? <Text style={s.contactItem}>{taxId}</Text> : null}
         </View>
 
         <View style={s.twoCol}>
@@ -136,7 +135,7 @@ export function DeliveryNotePdf({ order, client, items = [] }) {
         <View style={s.footer} fixed>
           <View style={s.footerLine} />
           <View style={s.footerRow}>
-            <Text style={s.footerText}>MASH / Martinez Star Home · {COMPANY.rnc}</Text>
+            <Text style={s.footerText}>MASH / Martinez Star Home{taxId ? ` · ${taxId}` : ''}</Text>
             <Text style={s.footerText}>{deliveryNumber}</Text>
             <Text style={s.footerText}>{COMPANY.phone} · {COMPANY.instagram}</Text>
           </View>

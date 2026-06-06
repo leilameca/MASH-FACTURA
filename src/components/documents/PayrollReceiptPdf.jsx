@@ -73,7 +73,6 @@ const s = StyleSheet.create({
 
 const COMPANY = {
   name:    'Martinez Star Home',
-  rnc:     'RNC 130-77604-2',
   address: 'Calle 10 Gurabo, Santiago, R.D.',
   phone:   '+1 (809) 327-2139',
   email:   'Martinezstarhome@gmail.com',
@@ -100,7 +99,7 @@ function fmtPeriod(periodKey) {
     .toLocaleDateString('es-DO', { month: 'long', year: 'numeric' });
 }
 
-export function PayrollReceiptPdf({ employee, period, production, bonus, discount, net, payment, records = [] }) {
+export function PayrollReceiptPdf({ employee, period, production, bonus, discount, net, payment, records = [], taxId }) {
   const receiptNumber = `NOM-${period.replace('-', '')}-${employee.employee_id}`;
 
   return (
@@ -132,8 +131,8 @@ export function PayrollReceiptPdf({ employee, period, production, bonus, discoun
           <View style={s.block}>
             <Text style={s.blockLabel}>Empresa</Text>
             <Text style={s.blockTitle}>{COMPANY.name}</Text>
-            <Text style={s.fieldLbl}>RNC</Text>
-            <Text style={s.fieldVal}>{COMPANY.rnc}</Text>
+            <Text style={s.fieldLbl}>Cédula</Text>
+            <Text style={s.fieldVal}>{taxId || '—'}</Text>
             <Text style={s.fieldLbl}>Período</Text>
             <Text style={s.fieldVal}>{fmtPeriod(period)}</Text>
           </View>
@@ -226,7 +225,7 @@ export function PayrollReceiptPdf({ employee, period, production, bonus, discoun
         <View fixed style={s.footer}>
           <View style={s.footerLine} />
           <View style={s.footerRow}>
-            <Text style={s.footerText}>{COMPANY.name} · {COMPANY.rnc} · {COMPANY.phone}</Text>
+            <Text style={s.footerText}>{COMPANY.name}{taxId ? ` · ${taxId}` : ''} · {COMPANY.phone}</Text>
             <Text style={s.footerText}>{receiptNumber}</Text>
           </View>
         </View>

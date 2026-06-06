@@ -56,7 +56,6 @@ const COMPANY = {
   phone: '+1 (809) 327-2139',
   instagram: '@martinez_star_home',
   email: 'Martinezstarhome@gmail.com',
-  rnc: 'RNC 130-77604-2',
 };
 
 function formatPdfDate(dateStr) {
@@ -65,7 +64,7 @@ function formatPdfDate(dateStr) {
   return d.toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-export function PaymentReceiptPdf({ payment, invoice, client, balanceBefore }) {
+export function PaymentReceiptPdf({ payment, invoice, client, balanceBefore, taxId }) {
   const number = `REC-${payment?.id?.slice(0, 8)?.toUpperCase() || Date.now()}`;
   const amount = Number(payment?.amount || 0);
   const previous = Number(balanceBefore ?? invoice?.total ?? 0);
@@ -127,7 +126,7 @@ export function PaymentReceiptPdf({ payment, invoice, client, balanceBefore }) {
         <View style={s.footer} fixed>
           <View style={s.footerLine} />
           <View style={s.footerRow}>
-            <Text style={s.footerText}>MASH / Martinez Star Home · {COMPANY.rnc}</Text>
+            <Text style={s.footerText}>MASH / Martinez Star Home{taxId ? ` · ${taxId}` : ''}</Text>
             <Text style={s.footerText}>{number}</Text>
             <Text style={s.footerText}>{COMPANY.phone} · {COMPANY.instagram} · {COMPANY.email}</Text>
           </View>

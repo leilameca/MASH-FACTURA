@@ -74,14 +74,25 @@ const s = StyleSheet.create({
   depositValue:   { fontSize: 12, fontFamily: 'Courier-Bold', color: C.black },
   depositSub:     { fontSize: 7, color: C.gray600, marginTop: 1 },
 
-  // ── Payment info section (Factura)
-  paySection:     { marginTop: 16, padding: 10, borderTop: '0.5px solid ' + C.gray300 },
+  // ── Payment info section
+  paySection:     { marginTop: 12, paddingTop: 8, borderTop: '0.5px solid ' + C.gray300 },
   payTitle:       { fontSize: 7, fontFamily: 'Helvetica-Bold', color: C.gray600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 7 },
-  payRow:         { flexDirection: 'row', gap: 20, flexWrap: 'wrap' },
-  payOption:      { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
-  payBox:         { width: 8, height: 8, border: '0.75px solid ' + C.gray300 },
-  payLabel:       { fontSize: 8, color: C.black },
-  payDetail:      { fontSize: 7, color: C.gray600, marginTop: 2, marginLeft: 12 },
+
+  // cotización: bank table
+  bankTable:      { flexDirection: 'row', alignItems: 'stretch' },
+  bankCol:        { flex: 1, paddingHorizontal: 6, paddingVertical: 5 },
+  bankDivider:    { width: 0.5, backgroundColor: C.gray300 },
+  bankName:       { fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: C.black, marginBottom: 4, textTransform: 'uppercase' },
+  bankField:      { fontSize: 6, color: C.gray600, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 1 },
+  bankValue:      { fontSize: 8, color: C.black, marginBottom: 3 },
+  bankTableWrap:  { border: '0.5px solid ' + C.gray300, borderRadius: 3, flex: 1 },
+  efecCol:        { width: 58, paddingLeft: 8, justifyContent: 'center', alignItems: 'center' },
+
+  // factura: simple checkboxes
+  payRow:         { flexDirection: 'row', gap: 20 },
+  payOption:      { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  payBox:         { width: 9, height: 9, border: '0.75px solid ' + C.gray300 },
+  payLabel:       { fontSize: 8.5, color: C.black },
 
   // ── Terms
   condSection:    { marginTop: 14, paddingTop: 8, borderTop: '0.5px solid ' + C.gray300 },
@@ -105,7 +116,6 @@ const s = StyleSheet.create({
 
 const COMPANY = {
   name:      'Martinez Star Home',
-  rnc:       'RNC 130-77604-2',
   address:   'Calle 10 Gurabo, Santiago, R.D.',
   phone:     '+1 (809) 327-2139',
   email:     'Martinezstarhome@gmail.com',
@@ -118,7 +128,7 @@ function formatPdfDate(dateStr) {
   return d.toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-export function FinancialPdf({ type, number, client, values, items }) {
+export function FinancialPdf({ type, number, client, values, items, taxId }) {
   const isInvoice = type === 'FACTURA';
   const balance = Number(values.balance_due ?? Math.max((values.total ?? 0) - (values.amount_paid ?? 0), 0));
   const isPaid   = isInvoice && balance <= 0 && Number(values.total ?? 0) > 0;
@@ -146,7 +156,7 @@ export function FinancialPdf({ type, number, client, values, items }) {
           <Text style={s.contactItem}>{COMPANY.instagram}</Text>
           <Text style={s.contactItem}>{COMPANY.email}</Text>
           <Text style={s.contactItem}>{COMPANY.address}</Text>
-          <Text style={s.contactItem}>{COMPANY.rnc}</Text>
+          {taxId ? <Text style={s.contactItem}>{taxId}</Text> : null}
         </View>
 
         {/* ── CLIENT + DETAILS ───────────────────────── */}
@@ -228,33 +238,69 @@ export function FinancialPdf({ type, number, client, values, items }) {
           </View>
         </View>
 
-        {/* ── PAYMENT INFO (facturas) ─────────────────── */}
-        {isInvoice ? (
-          <View style={s.paySection}>
-            <Text style={s.payTitle}>Información de pago</Text>
+        {/* ── PAYMENT INFO ───────────────────────────── */}
+        <View style={s.paySection}>
+          <Text style={s.payTitle}>Información de pago</Text>
+
+          {isInvoice ? (
+            /* Factura: solo casillas Efectivo / Transferencia */
             <View style={s.payRow}>
-              <View>
+              <View style={s.payOption}>
+                <View style={s.payBox} />
+                <Text style={s.payLabel}>Efectivo</Text>
+              </View>
+              <View style={s.payOption}>
+                <View style={s.payBox} />
+                <Text style={s.payLabel}>Transferencia bancaria</Text>
+              </View>
+            </View>
+          ) : (
+            /* Cotización: tabla de 4 bancos + casilla Efectivo */
+            <View style={s.bankTable}>
+              <View style={s.bankTableWrap}>
+                <View style={{ flexDirection: 'row', flex: 1 }}>
+                  <View style={s.bankCol}>
+                    <Text style={s.bankName}>Banco Popular</Text>
+                    <Text style={s.bankField}>Nombre</Text>
+                    <Text style={s.bankValue}>Leilany Morán</Text>
+                    <Text style={s.bankField}>Número</Text>
+                    <Text style={s.bankValue}>835976564 (Ahorro)</Text>
+                  </View>
+                  <View style={s.bankDivider} />
+                  <View style={s.bankCol}>
+                    <Text style={s.bankName}>Banreservas</Text>
+                    <Text style={s.bankField}>Nombre</Text>
+                    <Text style={s.bankValue}>Oscar Martínez</Text>
+                    <Text style={s.bankField}>Número</Text>
+                    <Text style={s.bankValue}>9609446290 (Ahorro)</Text>
+                  </View>
+                  <View style={s.bankDivider} />
+                  <View style={s.bankCol}>
+                    <Text style={s.bankName}>Qik Digital</Text>
+                    <Text style={s.bankField}>Nombre</Text>
+                    <Text style={s.bankValue}>Oscar Martínez</Text>
+                    <Text style={s.bankField}>Número</Text>
+                    <Text style={s.bankValue}>1004605598 (Ahorro)</Text>
+                  </View>
+                  <View style={s.bankDivider} />
+                  <View style={s.bankCol}>
+                    <Text style={s.bankName}>BHD</Text>
+                    <Text style={s.bankField}>Nombre</Text>
+                    <Text style={s.bankValue}>Oscar Martínez</Text>
+                    <Text style={s.bankField}>Número</Text>
+                    <Text style={s.bankValue}>37694010011 (Ahorro)</Text>
+                  </View>
+                </View>
+              </View>
+              <View style={s.efecCol}>
                 <View style={s.payOption}>
                   <View style={s.payBox} />
                   <Text style={s.payLabel}>Efectivo</Text>
                 </View>
               </View>
-              <View>
-                <View style={s.payOption}>
-                  <View style={s.payBox} />
-                  <Text style={s.payLabel}>Transferencia bancaria</Text>
-                </View>
-                <Text style={s.payDetail}>Banco Popular · Cta. 000-000000-0</Text>
-              </View>
-              <View>
-                <View style={s.payOption}>
-                  <View style={s.payBox} />
-                  <Text style={s.payLabel}>Tarjeta</Text>
-                </View>
-              </View>
             </View>
-          </View>
-        ) : null}
+          )}
+        </View>
 
         {/* ── CONDITIONS ─────────────────────────────── */}
         <View style={s.condSection}>
@@ -276,7 +322,7 @@ export function FinancialPdf({ type, number, client, values, items }) {
         <View style={s.footer} fixed>
           <View style={s.footerLine} />
           <View style={s.footerRow}>
-            <Text style={s.footerText}>MASH / Martinez Star Home · {COMPANY.rnc}</Text>
+            <Text style={s.footerText}>MASH / Martinez Star Home{taxId ? ` · ${taxId}` : ''}</Text>
             <Text style={s.footerText}>{number}</Text>
             <Text style={s.footerText}>{COMPANY.phone} · {COMPANY.instagram}</Text>
           </View>

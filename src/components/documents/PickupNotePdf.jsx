@@ -72,7 +72,6 @@ const COMPANY = {
   instagram: '@martinez_star_home',
   email:     'Martinezstarhome@gmail.com',
   address:   'Calle 10 Gurabo, Santiago, R.D.',
-  rnc:       'RNC 130-77604-2',
 };
 
 function formatPdfDate(dateStr) {
@@ -81,7 +80,7 @@ function formatPdfDate(dateStr) {
   return d.toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-export function PickupNotePdf({ repair, client }) {
+export function PickupNotePdf({ repair, client, taxId }) {
   const number = repair?.repair_number || `REP-${repair?.id?.slice(0, 6) || '000'}`;
 
   return (
@@ -106,7 +105,7 @@ export function PickupNotePdf({ repair, client }) {
           <Text style={s.contactItem}>{COMPANY.instagram}</Text>
           <Text style={s.contactItem}>{COMPANY.email}</Text>
           <Text style={s.contactItem}>{COMPANY.address}</Text>
-          <Text style={s.contactItem}>{COMPANY.rnc}</Text>
+          {taxId ? <Text style={s.contactItem}>{taxId}</Text> : null}
         </View>
 
         {/* ── CLIENT + REPAIR DETAILS ─────────────────── */}
@@ -180,7 +179,7 @@ export function PickupNotePdf({ repair, client }) {
         <View style={s.footer} fixed>
           <View style={s.footerLine} />
           <View style={s.footerRow}>
-            <Text style={s.footerText}>MASH / Martinez Star Home · {COMPANY.rnc}</Text>
+            <Text style={s.footerText}>MASH / Martinez Star Home{taxId ? ` · ${taxId}` : ''}</Text>
             <Text style={s.footerText}>{number}</Text>
             <Text style={s.footerText}>{COMPANY.phone} · {COMPANY.instagram}</Text>
           </View>

@@ -16,7 +16,7 @@ export async function generateFinancialPdf({ type, number, client, values, items
   };
 
   return persistPdfDocument({
-    component: <FinancialPdf client={client} items={items} number={number} type={type} values={valuesWithTerms} />,
+    component: <FinancialPdf client={client} items={items} number={number} taxId={settings?.tax_id} type={type} values={valuesWithTerms} />,
     path: `${type.toLowerCase()}/${number}.pdf`,
     fileName: `${number}.pdf`,
     documentRow: {
@@ -32,16 +32,17 @@ export async function generateFinancialPdf({ type, number, client, values, items
 
 async function getBusinessSettings() {
   if (!isSupabaseConfigured) return null;
-  const { data } = await supabase.from('business_settings').select('quote_terms,invoice_terms').limit(1).maybeSingle();
+  const { data } = await supabase.from('business_settings').select('quote_terms,invoice_terms,tax_id').limit(1).maybeSingle();
   return data;
 }
 
 export async function generatePickupNotePdf({ repair, client }) {
+  const settings = await getBusinessSettings();
   const number = repair?.repair_number || `REP-${repair.id.slice(0, 6)}`;
   const documentNumber = `REC-${number}`;
 
   return persistPdfDocument({
-    component: <PickupNotePdf client={client} repair={repair} />,
+    component: <PickupNotePdf client={client} repair={repair} taxId={settings?.tax_id} />,
     path: `albaran-recogida/${documentNumber}.pdf`,
     fileName: `${documentNumber}.pdf`,
     documentRow: {
@@ -55,11 +56,12 @@ export async function generatePickupNotePdf({ repair, client }) {
 }
 
 export async function generateWarrantyPdf({ order, client, items }) {
+  const settings = await getBusinessSettings();
   const number = order?.order_number || `PED-${order.id.slice(0, 6)}`;
   const warrantyNumber = `GAR-${number.replace(/[^0-9]/g, '')}`;
 
   return persistPdfDocument({
-    component: <WarrantyPdf client={client} items={items} order={order} />,
+    component: <WarrantyPdf client={client} items={items} order={order} taxId={settings?.tax_id} />,
     path: `garantia/${warrantyNumber}.pdf`,
     fileName: `${warrantyNumber}.pdf`,
     documentRow: {
@@ -74,11 +76,12 @@ export async function generateWarrantyPdf({ order, client, items }) {
 }
 
 export async function generateDeliveryNotePdf({ order, client, items }) {
+  const settings = await getBusinessSettings();
   const number = order?.order_number || `PED-${order.id.slice(0, 6)}`;
   const deliveryNumber = `ENT-${number.replace(/[^0-9]/g, '') || number}`;
 
   return persistPdfDocument({
-    component: <DeliveryNotePdf client={client} items={items} order={order} />,
+    component: <DeliveryNotePdf client={client} items={items} order={order} taxId={settings?.tax_id} />,
     path: `albaran-entrega/${deliveryNumber}.pdf`,
     fileName: `${deliveryNumber}.pdf`,
     documentRow: {
@@ -94,10 +97,11 @@ export async function generateDeliveryNotePdf({ order, client, items }) {
 }
 
 export async function generatePaymentReceiptPdf({ payment, invoice, client, balanceBefore }) {
+  const settings = await getBusinessSettings();
   const number = `REC-${payment.id.slice(0, 8).toUpperCase()}`;
 
   return persistPdfDocument({
-    component: <PaymentReceiptPdf balanceBefore={balanceBefore} client={client} invoice={invoice} payment={payment} />,
+    component: <PaymentReceiptPdf balanceBefore={balanceBefore} client={client} invoice={invoice} payment={payment} taxId={settings?.tax_id} />,
     path: `recibo-pago/${number}.pdf`,
     fileName: `${number}.pdf`,
     documentRow: {
