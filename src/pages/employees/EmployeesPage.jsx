@@ -1,7 +1,8 @@
 import { Users2 } from 'lucide-react';
 import { CrudModule } from '../../components/features/CrudModule';
 import { employeeAreas, employeePaymentTypes } from '../../constants/options';
-import { createRow, listRows } from '../../services/crudService';
+import { createRow, deleteRow, listRows } from '../../services/crudService';
+import { supabase } from '../../lib/supabaseClient';
 
 const areaOptions = employeeAreas.map((v) => ({
   value: v,
@@ -9,6 +10,13 @@ const areaOptions = employeeAreas.map((v) => ({
 }));
 
 const paymentTypeLabels = Object.fromEntries(employeePaymentTypes.map((t) => [t.value, t.label]));
+
+async function deleteEmployee(employee) {
+  // eliminar registros hijos antes de eliminar el empleado
+  await supabase.from('payroll_payments').delete().eq('employee_id', employee.id);
+  await supabase.from('production_records').delete().eq('employee_id', employee.id);
+  await deleteRow('employees', employee.id);
+}
 
 async function generateEmployeeId() {
   const existing = await listRows('employees', { select: 'employee_id' });
@@ -47,6 +55,7 @@ export function EmployeesPage() {
       filters={[{ name: 'area', options: areaOptions }]}
       getSubtitle={(row) => `${row.employee_id ?? ''} · ${row.area ?? ''}`}
       getTitle={(row) => row.name}
+      onDelete={deleteEmployee}
       onCreate={async (payload) => {
         const employee_id = await generateEmployeeId();
         await createRow('employees', { ...payload, employee_id });

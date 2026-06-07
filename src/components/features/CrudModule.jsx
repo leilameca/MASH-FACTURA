@@ -40,6 +40,7 @@ export function CrudModule({
   transformSubmit,
   onCreate,
   onUpdate,
+  onDelete,
   detail,
   rowActions,
   canCreate = true,
@@ -127,7 +128,11 @@ export function CrudModule({
     if (!deleting) return;
     setSaving(true);
     try {
-      await deleteRow(table, deleting.id);
+      if (onDelete) {
+        await onDelete(deleting);
+      } else {
+        await deleteRow(table, deleting.id);
+      }
       setToast({ type: 'success', message: 'Registro eliminado.' });
       setDeleting(null);
       await load();
