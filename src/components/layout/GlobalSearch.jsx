@@ -1,17 +1,26 @@
-import { FileText, Package, Search, Users, Wrench, X } from 'lucide-react';
+import { ArrowRight, Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { mainNav } from '../../constants/navigation';
 import { supabase } from '../../lib/supabaseClient';
 import { formatCurrency } from '../../lib/utils';
 
-const SECTIONS = [
+// ── Páginas navegables ────────────────────────────────────────────────────────
+// Reutilizamos mainNav + extras con keywords de búsqueda
+const NAV_ITEMS = [
+  ...mainNav.map((item) => ({ ...item, keywords: item.label.toLowerCase() })),
+  { label: 'Configuración', path: '/settings', icon: mainNav.find((n) => n.path === '/settings')?.icon ?? Search, keywords: 'configuracion ajustes empresa rnc cedula moneda prefijos terminos' },
+  { label: 'Mi cuenta', path: '/account', icon: mainNav.find((n) => n.path === '/account')?.icon ?? Search, keywords: 'cuenta perfil usuario contrasena password' },
+];
+
+// ── Secciones de contenido ────────────────────────────────────────────────────
+const CONTENT_SECTIONS = [
   {
     key: 'clients',
     label: 'Clientes',
-    icon: Users,
     table: 'clients',
     select: 'id, full_name, phone, email',
-    columns: ['full_name', 'phone', 'email'],
+    searchCols: ['full_name', 'phone', 'email'],
     getTitle: (r) => r.full_name,
     getSub: (r) => [r.phone, r.email].filter(Boolean).join(' · '),
     route: '/clients',
@@ -19,10 +28,9 @@ const SECTIONS = [
   {
     key: 'quotes',
     label: 'Cotizaciones',
-    icon: FileText,
     table: 'quotes',
     select: 'id, quote_number, total, clients(full_name)',
-    columns: ['quote_number'],
+    searchCols: ['quote_number'],
     getTitle: (r) => r.quote_number,
     getSub: (r) => [r.clients?.full_name, r.total != null ? formatCurrency(r.total) : null].filter(Boolean).join(' · '),
     route: '/quotes',
@@ -30,10 +38,9 @@ const SECTIONS = [
   {
     key: 'invoices',
     label: 'Facturas',
-    icon: FileText,
     table: 'invoices',
     select: 'id, invoice_number, total, clients(full_name)',
-    columns: ['invoice_number'],
+    searchCols: ['invoice_number'],
     getTitle: (r) => r.invoice_number,
     getSub: (r) => [r.clients?.full_name, r.total != null ? formatCurrency(r.total) : null].filter(Boolean).join(' · '),
     route: '/invoices',
@@ -41,10 +48,9 @@ const SECTIONS = [
   {
     key: 'orders',
     label: 'Pedidos',
-    icon: Package,
     table: 'orders',
     select: 'id, order_number, status, clients(full_name)',
-    columns: ['order_number'],
+    searchCols: ['order_number'],
     getTitle: (r) => r.order_number,
     getSub: (r) => [r.clients?.full_name, r.status].filter(Boolean).join(' · '),
     route: '/orders',
@@ -52,42 +58,52 @@ const SECTIONS = [
   {
     key: 'repairs',
     label: 'Reparaciones',
-    icon: Wrench,
     table: 'repairs',
     select: 'id, repair_number, device_brand, device_model, clients(full_name)',
-    columns: ['repair_number', 'device_brand', 'device_model'],
+    searchCols: ['repair_number', 'device_brand', 'device_model'],
     getTitle: (r) => r.repair_number,
     getSub: (r) => [r.clients?.full_name, r.device_brand, r.device_model].filter(Boolean).join(' · '),
     route: '/repairs',
   },
+  {
+    key: 'employees',
+    label: 'Empleados',
+    table: 'employees',
+    select: 'id, name, employee_id, area',
+    searchCols: ['name', 'employee_id'],
+    getTitle: (r) => r.name,
+    getSub: (r) => [r.employee_id, r.area].filter(Boolean).join(' · '),
+    route: '/employees',
+  },
 ];
 
-async function runSearch(query) {
-  if (!query || query.length < 2) return {};
+async function searchContent(query) {
   const term = `%${query}%`;
-
   const results = await Promise.allSettled(
-    SECTIONS.map(async (section) => {
-      const orClause = section.columns.map((c) => `${c}.ilike.${term}`).join(',');
-      const { data } = await supabase
-        .from(section.table)
-        .select(section.select)
-        .or(orClause)
-        .limit(5);
-      return { key: section.key, data: data ?? [] };
+    CONTENT_SECTIONS.map(async (s) => {
+      const orClause = s.searchCols.map((c) => `${c}.ilike.${term}`).join(',');
+      const { data } = await supabase.from(s.table).select(s.select).or(orClause).limit(4);
+      return { key: s.key, data: data ?? [] };
     }),
   );
-
   return Object.fromEntries(
-    results
-      .filter((r) => r.status === 'fulfilled')
-      .map((r) => [r.value.key, r.value.data]),
+    results.filter((r) => r.status === 'fulfilled').map((r) => [r.value.key, r.value.data]),
   );
 }
 
+function filterNavItems(query) {
+  const q = query.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  return NAV_ITEMS.filter((item) => {
+    const haystack = (item.keywords ?? item.label).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    return haystack.includes(q);
+  });
+}
+
+// ── Componente ────────────────────────────────────────────────────────────────
 export function GlobalSearch({ open, onClose }) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState({});
+  const [contentResults, setContentResults] = useState({});
+  const [navResults, setNavResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef(null);
   const navigate = useNavigate();
@@ -95,76 +111,117 @@ export function GlobalSearch({ open, onClose }) {
   useEffect(() => {
     if (open) {
       setQuery('');
-      setResults({});
+      setContentResults({});
+      setNavResults(NAV_ITEMS.slice(0, 6)); // accesos rápidos sin query
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [open]);
 
   useEffect(() => {
-    if (!query || query.length < 2) { setResults({}); return; }
+    if (!query) {
+      setNavResults(NAV_ITEMS.slice(0, 6));
+      setContentResults({});
+      setLoading(false);
+      return;
+    }
+    if (query.length < 2) {
+      setNavResults([]);
+      setContentResults({});
+      return;
+    }
+
+    setNavResults(filterNavItems(query));
+
     setLoading(true);
     const timer = setTimeout(async () => {
-      const res = await runSearch(query);
-      setResults(res);
+      const res = await searchContent(query);
+      setContentResults(res);
       setLoading(false);
-    }, 300);
+    }, 280);
     return () => clearTimeout(timer);
   }, [query]);
 
-  function goTo(route) {
-    navigate(route);
+  function goTo(path) {
+    navigate(path);
     onClose();
   }
 
-  const totalResults = Object.values(results).reduce((sum, arr) => sum + arr.length, 0);
-  const hasResults = totalResults > 0;
+  const totalContent = Object.values(contentResults).reduce((s, a) => s + a.length, 0);
+  const hasAny = navResults.length > 0 || totalContent > 0;
 
   if (!open) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh]"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[8vh]">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative z-10 w-full max-w-xl rounded-2xl border border-mash-border bg-white shadow-2xl mx-4">
-        {/* Input */}
+      <div className="relative z-10 mx-4 w-full max-w-lg rounded-2xl border border-mash-border bg-white shadow-2xl">
+
+        {/* ── Barra de búsqueda ── */}
         <div className="flex items-center gap-3 border-b border-mash-border px-4 py-3">
           <Search className="h-4 w-4 shrink-0 text-mash-text3" />
           <input
             ref={inputRef}
             className="flex-1 bg-transparent text-sm text-mash-text1 placeholder:text-mash-text3 outline-none"
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar clientes, cotizaciones, facturas, pedidos..."
+            placeholder="Buscar páginas, clientes, facturas, pedidos..."
             value={query}
           />
-          {query && (
-            <button className="text-mash-text3 hover:text-mash-text1" onClick={() => setQuery('')} type="button">
-              <X className="h-4 w-4" />
-            </button>
-          )}
-          <kbd className="hidden rounded-md border border-mash-border px-1.5 py-0.5 text-[10px] text-mash-text3 sm:block">ESC</kbd>
+          {query
+            ? <button className="text-mash-text3 hover:text-mash-text1" onClick={() => setQuery('')} type="button"><X className="h-4 w-4" /></button>
+            : <kbd className="rounded-md border border-mash-border px-1.5 py-0.5 text-[10px] text-mash-text3">ESC</kbd>
+          }
         </div>
 
-        {/* Results */}
-        <div className="max-h-[60vh] overflow-y-auto p-2">
-          {loading && (
-            <p className="py-8 text-center text-sm text-mash-text3">Buscando...</p>
+        {/* ── Resultados ── */}
+        <div className="max-h-[62vh] overflow-y-auto p-2">
+
+          {/* Páginas / navegación */}
+          {navResults.length > 0 && (
+            <div className="mb-2">
+              <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-mash-text3">
+                {query ? 'Páginas' : 'Accesos rápidos'}
+              </p>
+              {navResults.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-mash-surface2 transition"
+                    key={item.path}
+                    onClick={() => goTo(item.path)}
+                    type="button"
+                  >
+                    <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-mash-surface2">
+                      <Icon className="h-3.5 w-3.5 text-mash-text2" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-mash-text1">{item.label}</p>
+                      {item.section && <p className="text-xs text-mash-text3">{item.section}</p>}
+                    </div>
+                    <ArrowRight className="h-3.5 w-3.5 text-mash-text3" />
+                  </button>
+                );
+              })}
+            </div>
           )}
 
-          {!loading && query.length >= 2 && !hasResults && (
-            <p className="py-8 text-center text-sm text-mash-text3">Sin resultados para "{query}"</p>
+          {/* Separador si hay ambos */}
+          {navResults.length > 0 && totalContent > 0 && (
+            <div className="my-2 border-t border-mash-border" />
           )}
 
-          {!loading && query.length < 2 && (
-            <p className="py-6 text-center text-sm text-mash-text3">Escribe al menos 2 caracteres para buscar</p>
+          {/* Contenido */}
+          {loading && query.length >= 2 && (
+            <p className="py-6 text-center text-sm text-mash-text3">Buscando...</p>
           )}
 
-          {!loading && hasResults && SECTIONS.map((section) => {
-            const items = results[section.key] ?? [];
+          {!loading && query.length >= 2 && totalContent === 0 && navResults.length === 0 && (
+            <p className="py-6 text-center text-sm text-mash-text3">Sin resultados para "{query}"</p>
+          )}
+
+          {!loading && totalContent > 0 && CONTENT_SECTIONS.map((section) => {
+            const items = contentResults[section.key] ?? [];
             if (!items.length) return null;
-            const Icon = section.icon;
             return (
               <div className="mb-2" key={section.key}>
                 <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-mash-text3">
@@ -172,15 +229,12 @@ export function GlobalSearch({ open, onClose }) {
                 </p>
                 {items.map((item) => (
                   <button
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-mash-surface2 transition"
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-mash-surface2 transition"
                     key={item.id}
                     onClick={() => goTo(section.route)}
                     type="button"
                   >
-                    <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-mash-surface2">
-                      <Icon className="h-3.5 w-3.5 text-mash-text2" />
-                    </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1 pl-1">
                       <p className="truncate text-sm font-medium text-mash-text1">{section.getTitle(item)}</p>
                       <p className="truncate text-xs text-mash-text3">{section.getSub(item)}</p>
                     </div>
@@ -189,6 +243,13 @@ export function GlobalSearch({ open, onClose }) {
               </div>
             );
           })}
+        </div>
+
+        {/* ── Footer con atajos ── */}
+        <div className="flex items-center gap-4 border-t border-mash-border px-4 py-2">
+          <span className="text-[10px] text-mash-text3"><kbd className="rounded border border-mash-border px-1">↑↓</kbd> navegar</span>
+          <span className="text-[10px] text-mash-text3"><kbd className="rounded border border-mash-border px-1">↵</kbd> abrir</span>
+          <span className="text-[10px] text-mash-text3"><kbd className="rounded border border-mash-border px-1">ESC</kbd> cerrar</span>
         </div>
       </div>
     </div>
