@@ -2,7 +2,6 @@ import { Users2 } from 'lucide-react';
 import { CrudModule } from '../../components/features/CrudModule';
 import { employeeAreas, employeePaymentTypes } from '../../constants/options';
 import { createRow, deleteRow, listRows } from '../../services/crudService';
-import { supabase } from '../../lib/supabaseClient';
 
 const areaOptions = employeeAreas.map((v) => ({
   value: v,
@@ -12,15 +11,6 @@ const areaOptions = employeeAreas.map((v) => ({
 const paymentTypeLabels = Object.fromEntries(employeePaymentTypes.map((t) => [t.value, t.label]));
 
 async function deleteEmployee(employee) {
-  // 1. production_records primero: tiene FK a employees Y a payroll_payments
-  const { error: e1 } = await supabase.from('production_records').delete().eq('employee_id', employee.id);
-  if (e1) throw new Error(`Producción: ${e1.message}`);
-
-  // 2. payroll_payments: ya no hay production_records que los referencien
-  const { error: e2 } = await supabase.from('payroll_payments').delete().eq('employee_id', employee.id);
-  if (e2) throw new Error(`Pagos nómina: ${e2.message}`);
-
-  // 3. finalmente el empleado
   await deleteRow('employees', employee.id);
 }
 
