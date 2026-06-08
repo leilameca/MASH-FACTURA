@@ -1,7 +1,8 @@
 import { Users2 } from 'lucide-react';
 import { CrudModule } from '../../components/features/CrudModule';
 import { employeeAreas, employeePaymentTypes } from '../../constants/options';
-import { createRow, deleteRow, listRows } from '../../services/crudService';
+import { createRow, listRows } from '../../services/crudService';
+import { supabase } from '../../lib/supabaseClient';
 
 const areaOptions = employeeAreas.map((v) => ({
   value: v,
@@ -11,7 +12,8 @@ const areaOptions = employeeAreas.map((v) => ({
 const paymentTypeLabels = Object.fromEntries(employeePaymentTypes.map((t) => [t.value, t.label]));
 
 async function deleteEmployee(employee) {
-  await deleteRow('employees', employee.id);
+  const { error } = await supabase.rpc('delete_employee', { p_id: employee.id });
+  if (error) throw new Error(error.message);
 }
 
 async function generateEmployeeId() {
