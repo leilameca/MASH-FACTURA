@@ -34,7 +34,7 @@ function useGreeting() {
 
 export function AppShell() {
   const location = useLocation();
-  const title = routeTitles[location.pathname] ?? 'MASH Flow';
+  const title = routeTitles[location.pathname] ?? 'MASH Office';
   const { greeting, firstName, date } = useGreeting();
 
   return (

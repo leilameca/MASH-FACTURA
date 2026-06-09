@@ -83,7 +83,7 @@ export function LoginPage() {
         <div className="text-center">
           <img alt="MASH" className="mx-auto h-16 w-auto object-contain" src={logoSrc} />
           <div className="my-5 h-px bg-mash-border" />
-          <h1 className="text-2xl font-bold text-mash-text1">Bienvenido a MASH Flow</h1>
+          <h1 className="text-2xl font-bold text-mash-text1">Bienvenido a MASH Office</h1>
           <p className="mt-2 text-sm text-mash-text3">Ingresa tus credenciales para continuar</p>
         </div>
 
@@ -137,7 +137,7 @@ export function LoginPage() {
           </Button>
         </form>
 
-        <p className="mt-8 text-center text-[11px] text-mash-text4">MASH Flow — Solo uso interno</p>
+        <p className="mt-8 text-center text-[11px] text-mash-text4">MASH Office — Solo uso interno</p>
       </section>
 
       {forgotOpen ? (
