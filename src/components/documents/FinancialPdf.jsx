@@ -172,7 +172,7 @@ export function FinancialPdf({ type, number, client, values, items, taxId }) {
             <Text style={s.sectionLabel}>Detalles del documento</Text>
             <DetailRow label="Fecha de emisión" value={formatPdfDate(values.issue_date)} />
             {values.valid_until ? <DetailRow label="Válida hasta" value={formatPdfDate(values.valid_until)} /> : null}
-            {values.due_date ? <DetailRow label="Fecha de vencimiento" value={formatPdfDate(values.due_date)} /> : null}
+            {values.due_date ? <DetailRow label="Fecha de entrega" value={formatPdfDate(values.due_date)} /> : null}
             {values.ncf ? <DetailRow label="NCF" value={values.ncf} /> : null}
             {isInvoice && values.payment_method ? <DetailRow label="Método de pago" value={values.payment_method} /> : null}
           </View>
