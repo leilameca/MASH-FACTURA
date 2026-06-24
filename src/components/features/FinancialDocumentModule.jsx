@@ -318,6 +318,7 @@ function FinancialForm({ document, isInvoice, clients, products, statuses, loadi
           {statuses.map((status) => <option key={status} value={status}>{statusLabels[status] ?? status}</option>)}
         </Select>
         <Input label="Fecha" onChange={(event) => setValue('issue_date', event.target.value)} type="date" value={values.issue_date || ''} />
+        {isInvoice ? <Input label="Fecha de entrega" onChange={(event) => setValue('due_date', event.target.value)} type="date" value={values.due_date || ''} /> : null}
         {!isInvoice ? <Input label="Válida hasta" onChange={(event) => setValue('valid_until', event.target.value)} type="date" value={values.valid_until || ''} /> : null}
         {isInvoice ? <Input label="Fecha de entrega" onChange={(event) => setValue('delivery_date', event.target.value)} type="date" value={values.delivery_date || ''} /> : null}
         <label className="flex min-h-12 items-center gap-3 rounded-[10px] border border-mash-borderMd px-4 text-sm font-medium text-mash-text2 lg:mt-6 lg:min-h-10">
@@ -438,6 +439,7 @@ function normalizeDocument(values, totals, isInvoice) {
   };
   if (isInvoice) {
     payload.invoice_number = values.invoice_number;
+    payload.due_date = values.due_date || null;
     payload.amount_paid = Number(values.amount_paid || 0);
     payload.quote_id = values.quote_id || null;
     payload.delivery_date = values.delivery_date || null;
