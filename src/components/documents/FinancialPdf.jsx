@@ -80,11 +80,11 @@ const s = StyleSheet.create({
 
   // cotización: bank table
   bankTable:      { flexDirection: 'row', alignItems: 'stretch' },
-  bankCol:        { flex: 1, paddingHorizontal: 6, paddingVertical: 5 },
+  bankCol:        { flex: 1, paddingHorizontal: 8, paddingVertical: 6 },
   bankDivider:    { width: 0.5, backgroundColor: C.gray300 },
-  bankName:       { fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: C.black, marginBottom: 4, textTransform: 'uppercase' },
-  bankField:      { fontSize: 6, color: C.gray600, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 1 },
-  bankValue:      { fontSize: 8, color: C.black, marginBottom: 3 },
+  bankName:       { fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: C.black, marginBottom: 5, textTransform: 'uppercase' },
+  bankField:      { fontSize: 6, color: C.gray600, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 2 },
+  bankValue:      { fontSize: 9, fontFamily: 'Courier', color: C.black, marginBottom: 5 },
   bankTableWrap:  { border: '0.5px solid ' + C.gray300, borderRadius: 3, flex: 1 },
   efecCol:        { width: 58, paddingLeft: 8, justifyContent: 'center', alignItems: 'center' },
 
