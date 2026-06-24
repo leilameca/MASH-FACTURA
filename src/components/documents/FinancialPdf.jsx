@@ -87,6 +87,8 @@ const s = StyleSheet.create({
   bankHolder:     { fontSize: 8, color: C.black, marginBottom: 2 },
   bankNumber:     { fontSize: 7.5, color: C.gray700, marginBottom: 1 },
   bankType:       { fontSize: 6.5, color: C.gray600 },
+  bankRow:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 },
+  bankMetaRight:  { fontSize: 7, color: C.gray600, textAlign: 'right' },
   efecCol:        { width: 62, paddingLeft: 10, justifyContent: 'center', alignItems: 'center' },
 
   // factura: simple checkboxes
@@ -261,31 +263,47 @@ export function FinancialPdf({ type, number, client, values, items, taxId }) {
             <View style={s.bankTable}>
               <View style={s.bankTableWrap}>
                 <View style={s.bankCol}>
-                  <Text style={s.bankName}>Banco Popular</Text>
-                  <Text style={s.bankHolder}>Leilany Morán</Text>
-                  <Text style={s.bankNumber}>835976564</Text>
-                  <Text style={s.bankType}>Ahorro</Text>
+                  <View style={s.bankRow}>
+                    <Text style={s.bankName}>Banco Popular</Text>
+                    <Text style={[s.bankType, s.bankMetaRight]}>Ahorro</Text>
+                  </View>
+                  <View style={s.bankRow}>
+                    <Text style={s.bankHolder}>Leilany Morán</Text>
+                    <Text style={[s.bankNumber, s.bankMetaRight]}>835976564</Text>
+                  </View>
                 </View>
                 <View style={s.bankDivider} />
                 <View style={s.bankCol}>
-                  <Text style={s.bankName}>Banreservas</Text>
-                  <Text style={s.bankHolder}>Oscar Martínez</Text>
-                  <Text style={s.bankNumber}>9609446290</Text>
-                  <Text style={s.bankType}>Ahorro</Text>
+                  <View style={s.bankRow}>
+                    <Text style={s.bankName}>Banreservas</Text>
+                    <Text style={[s.bankType, s.bankMetaRight]}>Ahorro</Text>
+                  </View>
+                  <View style={s.bankRow}>
+                    <Text style={s.bankHolder}>Oscar Martínez</Text>
+                    <Text style={[s.bankNumber, s.bankMetaRight]}>9609446290</Text>
+                  </View>
                 </View>
                 <View style={s.bankDivider} />
                 <View style={s.bankCol}>
-                  <Text style={s.bankName}>Qik Digital</Text>
-                  <Text style={s.bankHolder}>Oscar Martínez</Text>
-                  <Text style={s.bankNumber}>1004605598</Text>
-                  <Text style={s.bankType}>Ahorro</Text>
+                  <View style={s.bankRow}>
+                    <Text style={s.bankName}>Qik Digital</Text>
+                    <Text style={[s.bankType, s.bankMetaRight]}>Ahorro</Text>
+                  </View>
+                  <View style={s.bankRow}>
+                    <Text style={s.bankHolder}>Oscar Martínez</Text>
+                    <Text style={[s.bankNumber, s.bankMetaRight]}>1004605598</Text>
+                  </View>
                 </View>
                 <View style={s.bankDivider} />
                 <View style={s.bankCol}>
-                  <Text style={s.bankName}>BHD</Text>
-                  <Text style={s.bankHolder}>Oscar Martínez</Text>
-                  <Text style={s.bankNumber}>37694010011</Text>
-                  <Text style={s.bankType}>Ahorro</Text>
+                  <View style={s.bankRow}>
+                    <Text style={s.bankName}>BHD</Text>
+                    <Text style={[s.bankType, s.bankMetaRight]}>Ahorro</Text>
+                  </View>
+                  <View style={s.bankRow}>
+                    <Text style={s.bankHolder}>Oscar Martínez</Text>
+                    <Text style={[s.bankNumber, s.bankMetaRight]}>37694010011</Text>
+                  </View>
                 </View>
               </View>
               <View style={s.efecCol}>
