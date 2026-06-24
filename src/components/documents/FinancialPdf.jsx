@@ -16,25 +16,25 @@ const C = {
 };
 
 const s = StyleSheet.create({
-  page:         { padding: '15mm 18mm 28mm 18mm', fontFamily: 'Helvetica', backgroundColor: C.white, color: C.black },
+  page:         { padding: '12mm 18mm 28mm 18mm', fontFamily: 'Helvetica', backgroundColor: C.white, color: C.black },
 
   // ── Header
-  header:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  logo:         { width: 110, height: 70, objectFit: 'contain' },
+  header:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  logo:         { width: 100, height: 62, objectFit: 'contain' },
   docBlock:     { alignItems: 'flex-end' },
   docType:      { fontSize: 26, fontFamily: 'Helvetica-Bold', color: C.black, textTransform: 'uppercase', letterSpacing: -0.5 },
   docNumber:    { fontSize: 10, color: C.gray600, marginTop: 3, letterSpacing: 0.5 },
 
   // ── Champagne divider line
   dividerGray:  { height: 0.5, backgroundColor: C.gray300, marginTop: 0 },
-  dividerChamp: { height: 2, backgroundColor: C.champagne, marginBottom: 12 },
+  dividerChamp: { height: 2, backgroundColor: C.champagne, marginBottom: 8 },
 
   // ── Contact strip (gray band)
-  contactStrip:   { backgroundColor: C.gray100, paddingVertical: 6, paddingHorizontal: 10, flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14, borderRadius: 4 },
+  contactStrip:   { backgroundColor: C.gray100, paddingVertical: 5, paddingHorizontal: 10, flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10, borderRadius: 4 },
   contactItem:    { fontSize: 7, color: C.gray700 },
 
   // ── Client + details side by side
-  clientSection:  { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 },
+  clientSection:  { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
   clientBlock:    { flex: 1, paddingRight: 20, borderLeft: '2.5px solid ' + C.champagne, paddingLeft: 8 },
   detailsBlock:   { width: 185 },
   sectionLabel:   { fontSize: 6.5, fontFamily: 'Helvetica-Bold', color: C.gray600, textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 5 },
@@ -54,7 +54,7 @@ const s = StyleSheet.create({
   colTotal:       { width: 85, textAlign: 'right', fontFamily: 'Courier' },
 
   // ── Totals
-  totalsSection:  { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 },
+  totalsSection:  { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 6 },
   totalsBox:      { width: 220 },
   totalRow:       { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottom: '0.25px solid #E4E4E7' },
   totalLabel:     { fontSize: 8.5, color: C.gray600 },
@@ -75,18 +75,21 @@ const s = StyleSheet.create({
   depositSub:     { fontSize: 7, color: C.gray600, marginTop: 1 },
 
   // ── Payment info section
-  paySection:     { marginTop: 12, paddingTop: 8, borderTop: '0.5px solid ' + C.gray300 },
+  paySection:     { marginTop: 8, paddingTop: 6, borderTop: '0.5px solid ' + C.gray300 },
   payTitle:       { fontSize: 7, fontFamily: 'Helvetica-Bold', color: C.gray600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 7 },
 
   // cotización: bank table
-  bankTable:      { flexDirection: 'row', alignItems: 'stretch' },
-  bankCol:        { flex: 1, paddingHorizontal: 8, paddingVertical: 6 },
-  bankDivider:    { width: 0.5, backgroundColor: C.gray300 },
-  bankName:       { fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: C.black, marginBottom: 5, textTransform: 'uppercase' },
-  bankField:      { fontSize: 6, color: C.gray600, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 2 },
-  bankValue:      { fontSize: 9, fontFamily: 'Courier', color: C.black, marginBottom: 5 },
-  bankTableWrap:  { border: '0.5px solid ' + C.gray300, borderRadius: 3, flex: 1 },
-  efecCol:        { width: 58, paddingLeft: 8, justifyContent: 'center', alignItems: 'center' },
+  bankTable:      { flexDirection: 'row', alignItems: 'center' },
+  bankTableWrap:  { flex: 1, flexDirection: 'row', border: '0.5px solid ' + C.gray300, borderRadius: 3 },
+  bankCol:        { flex: 1, paddingHorizontal: 8, paddingVertical: 7, flexDirection: 'column' },
+  bankDivider:    { width: 0.5, backgroundColor: C.gray300, alignSelf: 'stretch' },
+  bankName:       { fontSize: 7, fontFamily: 'Helvetica-Bold', color: C.black, textTransform: 'uppercase', marginBottom: 6 },
+  bankHolder:     { fontSize: 8, color: C.black, marginBottom: 3 },
+  bankNumber:     { fontSize: 7.5, color: C.gray700, marginBottom: 1 },
+  bankType:       { fontSize: 6.5, color: C.gray600 },
+  bankRow:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  bankMetaRight:  { fontSize: 7, color: C.gray600, textAlign: 'right' },
+  efecCol:        { width: 62, paddingLeft: 10, justifyContent: 'center', alignItems: 'center' },
 
   // factura: simple checkboxes
   payRow:         { flexDirection: 'row', gap: 20 },
@@ -95,17 +98,17 @@ const s = StyleSheet.create({
   payLabel:       { fontSize: 8.5, color: C.black },
 
   // ── Terms
-  condSection:    { marginTop: 14, paddingTop: 8, borderTop: '0.5px solid ' + C.gray300 },
-  condLabel:      { fontSize: 6.5, fontFamily: 'Helvetica-Bold', color: C.gray600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
-  condText:       { fontSize: 7, color: C.gray700, lineHeight: 1.5 },
+  condSection:    { marginTop: 8, paddingTop: 6, borderTop: '0.5px solid ' + C.gray300 },
+  condLabel:      { fontSize: 6.5, fontFamily: 'Helvetica-Bold', color: C.gray600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 3 },
+  condText:       { fontSize: 6.5, color: C.gray700, lineHeight: 1.5 },
 
   // ── Signatures
-  sigSection:     { flexDirection: 'row', justifyContent: 'space-between', marginTop: 18, gap: 26 },
-  sigBlock:       { flex: 1 },
-  signatureImage: { width: 112, height: 38, objectFit: 'contain', alignSelf: 'center', marginBottom: 2 },
-  signatureSpace: { height: 40 },
-  sigLine:        { height: 0.5, backgroundColor: C.gray300, marginBottom: 4 },
-  sigLabel:       { fontSize: 7, color: C.gray600, textAlign: 'center' },
+  sigSection:     { flexDirection: 'row', justifyContent: 'space-between', marginTop: 14, gap: 40 },
+  sigBlock:       { flex: 1, alignItems: 'center' },
+  signatureImage: { width: 120, height: 50, objectFit: 'contain', alignSelf: 'center', marginBottom: 4 },
+  signatureSpace: { height: 50 },
+  sigLine:        { height: 0.5, backgroundColor: C.gray300, marginBottom: 5, alignSelf: 'stretch' },
+  sigLabel:       { fontSize: 8.5, color: C.gray600, textAlign: 'center', fontFamily: 'Helvetica-Bold' },
 
   // ── Footer (fixed)
   footer:         { position: 'absolute', bottom: '12mm', left: '18mm', right: '18mm' },
@@ -172,7 +175,8 @@ export function FinancialPdf({ type, number, client, values, items, taxId }) {
             <Text style={s.sectionLabel}>Detalles del documento</Text>
             <DetailRow label="Fecha de emisión" value={formatPdfDate(values.issue_date)} />
             {values.valid_until ? <DetailRow label="Válida hasta" value={formatPdfDate(values.valid_until)} /> : null}
-            {values.due_date ? <DetailRow label="Fecha de entrega" value={formatPdfDate(values.due_date)} /> : null}
+            {values.due_date ? <DetailRow label="Fecha de vencimiento" value={formatPdfDate(values.due_date)} /> : null}
+            {isInvoice && values.delivery_date ? <DetailRow label="Fecha de entrega" value={formatPdfDate(values.delivery_date)} /> : null}
             {values.ncf ? <DetailRow label="NCF" value={values.ncf} /> : null}
             {isInvoice && values.payment_method ? <DetailRow label="Método de pago" value={values.payment_method} /> : null}
           </View>
@@ -258,37 +262,47 @@ export function FinancialPdf({ type, number, client, values, items, taxId }) {
             /* Cotización: tabla de 4 bancos + casilla Efectivo */
             <View style={s.bankTable}>
               <View style={s.bankTableWrap}>
-                <View style={{ flexDirection: 'row', flex: 1 }}>
-                  <View style={s.bankCol}>
+                <View style={s.bankCol}>
+                  <View style={s.bankRow}>
                     <Text style={s.bankName}>Banco Popular</Text>
-                    <Text style={s.bankField}>Nombre</Text>
-                    <Text style={s.bankValue}>Leilany Morán</Text>
-                    <Text style={s.bankField}>Número</Text>
-                    <Text style={s.bankValue}>835976564 (Ahorro)</Text>
+                    <Text style={[s.bankType, s.bankMetaRight]}>Ahorro</Text>
                   </View>
-                  <View style={s.bankDivider} />
-                  <View style={s.bankCol}>
+                  <View style={s.bankRow}>
+                    <Text style={s.bankHolder}>Leilany Morán</Text>
+                    <Text style={[s.bankNumber, s.bankMetaRight]}>835976564</Text>
+                  </View>
+                </View>
+                <View style={s.bankDivider} />
+                <View style={s.bankCol}>
+                  <View style={s.bankRow}>
                     <Text style={s.bankName}>Banreservas</Text>
-                    <Text style={s.bankField}>Nombre</Text>
-                    <Text style={s.bankValue}>Oscar Martínez</Text>
-                    <Text style={s.bankField}>Número</Text>
-                    <Text style={s.bankValue}>9609446290 (Ahorro)</Text>
+                    <Text style={[s.bankType, s.bankMetaRight]}>Ahorro</Text>
                   </View>
-                  <View style={s.bankDivider} />
-                  <View style={s.bankCol}>
+                  <View style={s.bankRow}>
+                    <Text style={s.bankHolder}>Oscar Martínez</Text>
+                    <Text style={[s.bankNumber, s.bankMetaRight]}>9609446290</Text>
+                  </View>
+                </View>
+                <View style={s.bankDivider} />
+                <View style={s.bankCol}>
+                  <View style={s.bankRow}>
                     <Text style={s.bankName}>Qik Digital</Text>
-                    <Text style={s.bankField}>Nombre</Text>
-                    <Text style={s.bankValue}>Oscar Martínez</Text>
-                    <Text style={s.bankField}>Número</Text>
-                    <Text style={s.bankValue}>1004605598 (Ahorro)</Text>
+                    <Text style={[s.bankType, s.bankMetaRight]}>Ahorro</Text>
                   </View>
-                  <View style={s.bankDivider} />
-                  <View style={s.bankCol}>
+                  <View style={s.bankRow}>
+                    <Text style={s.bankHolder}>Oscar Martínez</Text>
+                    <Text style={[s.bankNumber, s.bankMetaRight]}>1004605598</Text>
+                  </View>
+                </View>
+                <View style={s.bankDivider} />
+                <View style={s.bankCol}>
+                  <View style={s.bankRow}>
                     <Text style={s.bankName}>BHD</Text>
-                    <Text style={s.bankField}>Nombre</Text>
-                    <Text style={s.bankValue}>Oscar Martínez</Text>
-                    <Text style={s.bankField}>Número</Text>
-                    <Text style={s.bankValue}>37694010011 (Ahorro)</Text>
+                    <Text style={[s.bankType, s.bankMetaRight]}>Ahorro</Text>
+                  </View>
+                  <View style={s.bankRow}>
+                    <Text style={s.bankHolder}>Oscar Martínez</Text>
+                    <Text style={[s.bankNumber, s.bankMetaRight]}>37694010011</Text>
                   </View>
                 </View>
               </View>
