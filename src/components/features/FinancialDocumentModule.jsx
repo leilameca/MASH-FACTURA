@@ -1,5 +1,5 @@
 import { FileText, Plus, Trash2 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
@@ -268,17 +268,28 @@ export function FinancialDocumentModule({ type }) {
 function FinancialForm({ document, isInvoice, clients, products, statuses, loading, onSave, onClose }) {
   const [values, setValues] = useState(document ?? null);
   const [items, setItems] = useState([blankItem()]);
+  const valuesRef = useRef(document ?? null);
   const totals = useMemo(() => calculateTotals(values ?? {}, items), [values, items]);
 
   useEffect(() => {
     setValues(document);
+    valuesRef.current = document ?? null;
     setItems(document?.items?.length ? document.items : [blankItem()]);
   }, [document]);
 
   if (!values) return null;
 
   function setValue(name, value) {
-    setValues((current) => ({ ...current, [name]: value }));
+    setValues((current) => {
+      const next = current ? { ...current, [name]: value } : { [name]: value };
+      valuesRef.current = next;
+      return next;
+    });
+  }
+
+  function handleSave() {
+    const currentTotals = calculateTotals(valuesRef.current ?? {}, items);
+    onSave({ ...valuesRef.current, ...currentTotals }, items);
   }
 
   function setItem(index, patch) {
@@ -300,7 +311,7 @@ function FinancialForm({ document, isInvoice, clients, products, statuses, loadi
       footer={(
         <>
           <Button className="w-full md:w-auto" disabled={loading} onClick={onClose} variant="secondary">Cancelar</Button>
-          <Button className="w-full md:w-auto" loading={loading} onClick={() => onSave({ ...values, ...totals }, items)}>Guardar</Button>
+          <Button className="w-full md:w-auto" loading={loading} onClick={handleSave}>Guardar</Button>
         </>
       )}
       onClose={onClose}
@@ -318,9 +329,8 @@ function FinancialForm({ document, isInvoice, clients, products, statuses, loadi
           {statuses.map((status) => <option key={status} value={status}>{statusLabels[status] ?? status}</option>)}
         </Select>
         <Input label="Fecha" onChange={(event) => setValue('issue_date', event.target.value)} type="date" value={values.issue_date || ''} />
-        {isInvoice ? <Input label="Fecha de entrega" onChange={(event) => setValue('due_date', event.target.value)} type="date" value={values.due_date || ''} /> : null}
-        {!isInvoice ? <Input label="Válida hasta" onChange={(event) => setValue('valid_until', event.target.value)} type="date" value={values.valid_until || ''} /> : null}
-        {isInvoice ? <Input label="Fecha de entrega" onChange={(event) => setValue('delivery_date', event.target.value)} type="date" value={values.delivery_date || ''} /> : null}
+        {isInvoice ? <Input label="Fecha de entrega" onChange={(event) => setValue('due_date', event.target.value || null)} type="date" value={values.due_date || ''} /> : null}
+        {!isInvoice ? <Input label="Válida hasta" onChange={(event) => setValue('valid_until', event.target.value || null)} type="date" value={values.valid_until || ''} /> : null}
         <label className="flex min-h-12 items-center gap-3 rounded-[10px] border border-mash-borderMd px-4 text-sm font-medium text-mash-text2 lg:mt-6 lg:min-h-10">
           <input checked={Boolean(values.tax_enabled)} className="h-4 w-4 accent-mash-brand" onChange={(event) => setValue('tax_enabled', event.target.checked)} type="checkbox" />
           ITBIS 18%
@@ -390,6 +400,7 @@ function defaultDocument(isInvoice, numberKey) {
     [numberKey]: `${prefix}-${Date.now().toString().slice(-5)}`,
     status: isInvoice ? 'issued' : 'draft',
     issue_date: new Date().toISOString().slice(0, 10),
+    valid_until: null,
     tax_enabled: false,
     discount: 0,
     delivery_fee: 0,
@@ -401,11 +412,18 @@ function defaultDocument(isInvoice, numberKey) {
   };
 }
 
+function formatDateValue(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString().slice(0, 10);
+}
+
 function normalizeDocument(values, totals, isInvoice) {
   const payload = {
     client_id: values.client_id,
     status: values.status,
-    issue_date: values.issue_date || new Date().toISOString().slice(0, 10),
+    issue_date: formatDateValue(values.issue_date) || new Date().toISOString().slice(0, 10),
     subtotal: totals.subtotal,
     discount: totals.discount,
     tax_enabled: Boolean(values.tax_enabled),
@@ -418,14 +436,14 @@ function normalizeDocument(values, totals, isInvoice) {
   };
   if (isInvoice) {
     payload.invoice_number = values.invoice_number;
-    payload.due_date = values.due_date || null;
+    payload.due_date = formatDateValue(values.due_date);
     payload.amount_paid = Number(values.amount_paid || 0);
     payload.quote_id = values.quote_id || null;
-    payload.delivery_date = values.delivery_date || null;
+    payload.payment_method = values.payment_method || null;
     payload.status = payload.amount_paid >= payload.total ? 'paid' : payload.amount_paid > 0 ? 'partially_paid' : values.status;
   } else {
     payload.quote_number = values.quote_number;
-    payload.valid_until = values.valid_until || null;
+    payload.valid_until = formatDateValue(values.valid_until);
     payload.required_deposit = Number(values.required_deposit || 0);
   }
   return payload;

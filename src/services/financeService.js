@@ -27,7 +27,14 @@ export function roundMoney(value) {
 }
 
 export async function registerPayment(values) {
-  const payment = await createRow('payments', values);
+  const normalizedValues = {
+    ...values,
+    amount: roundMoney(Number(values.amount || 0)),
+    payment_date: values.payment_date || new Date().toISOString().slice(0, 10),
+    payment_method: values.payment_method || 'efectivo',
+  };
+
+  const payment = await createRow('payments', normalizedValues);
   if (!values.invoice_id) return payment;
 
   const { data: invoice, error: invoiceError } = await supabase
@@ -38,13 +45,13 @@ export async function registerPayment(values) {
 
   if (invoiceError) throw invoiceError;
 
-  const amountPaid = roundMoney(Number(invoice.amount_paid || 0) + Number(values.amount || 0));
+  const amountPaid = roundMoney(Number(invoice.amount_paid || 0) + Number(normalizedValues.amount || 0));
   const balance = roundMoney(Number(invoice.total || 0) - amountPaid);
   const status = balance <= 0 ? 'paid' : amountPaid > 0 ? 'partially_paid' : 'issued';
 
   const { error: updateError } = await supabase
     .from('invoices')
-    .update({ amount_paid: amountPaid, status, payment_method: values.payment_method })
+    .update({ amount_paid: amountPaid, status, payment_method: normalizedValues.payment_method })
     .eq('id', invoice.id);
 
   if (updateError) throw updateError;
