@@ -95,6 +95,7 @@ const s = StyleSheet.create({
   payRow:         { flexDirection: 'row', gap: 20 },
   payOption:      { flexDirection: 'row', alignItems: 'center', gap: 5 },
   payBox:         { width: 9, height: 9, border: '0.75px solid ' + C.gray300 },
+  payBoxChecked:  { width: 9, height: 9, border: '0.75px solid ' + C.gray300, backgroundColor: C.gray900 },
   payLabel:       { fontSize: 8.5, color: C.black },
 
   // ── Terms
@@ -123,6 +124,15 @@ const COMPANY = {
   phone:     '+1 (809) 327-2139',
   email:     'Martinezstarhome@gmail.com',
   instagram: '@martinez_star_home',
+};
+
+const METHOD_LABELS = {
+  efectivo: 'Efectivo',
+  transferencia: 'Transferencia bancaria',
+  tarjeta: 'Tarjeta',
+  qik: 'Qik',
+  cheque: 'Cheque',
+  otro: 'Otro',
 };
 
 function formatPdfDate(dateStr) {
@@ -178,7 +188,7 @@ export function FinancialPdf({ type, number, client, values, items, taxId }) {
             {values.due_date ? <DetailRow label="Fecha de vencimiento" value={formatPdfDate(values.due_date)} /> : null}
             {isInvoice && values.delivery_date ? <DetailRow label="Fecha de entrega" value={formatPdfDate(values.delivery_date)} /> : null}
             {values.ncf ? <DetailRow label="NCF" value={values.ncf} /> : null}
-            {isInvoice && values.payment_method ? <DetailRow label="Método de pago" value={values.payment_method} /> : null}
+            {isInvoice && values.payment_method ? <DetailRow label="Método de pago" value={METHOD_LABELS[values.payment_method] ?? values.payment_method} /> : null}
           </View>
         </View>
 
@@ -247,15 +257,15 @@ export function FinancialPdf({ type, number, client, values, items, taxId }) {
           <Text style={s.payTitle}>Información de pago</Text>
 
           {isInvoice ? (
-            /* Factura: solo casillas Efectivo / Transferencia */
-            <View style={s.payRow}>
-              <View style={s.payOption}>
-                <View style={s.payBox} />
-                <Text style={s.payLabel}>Efectivo</Text>
-              </View>
-              <View style={s.payOption}>
-                <View style={s.payBox} />
-                <Text style={s.payLabel}>Transferencia bancaria</Text>
+            /* Factura: casillas dinámicas según el método seleccionado */
+            <View>
+              <View style={s.payRow}>
+                {Object.entries(METHOD_LABELS).map(([value, label]) => (
+                  <View style={s.payOption} key={value}>
+                    <View style={[s.payBox, values.payment_method === value && s.payBoxChecked]} />
+                    <Text style={s.payLabel}>{label}</Text>
+                  </View>
+                ))}
               </View>
             </View>
           ) : (

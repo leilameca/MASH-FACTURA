@@ -330,6 +330,16 @@ function FinancialForm({ document, isInvoice, clients, products, statuses, loadi
         </Select>
         <Input label="Fecha" onChange={(event) => setValue('issue_date', event.target.value)} type="date" value={values.issue_date || ''} />
         {isInvoice ? <Input label="Fecha de entrega" onChange={(event) => setValue('due_date', event.target.value || null)} type="date" value={values.due_date || ''} /> : null}
+        {isInvoice ? (
+          <Select label="Método de pago" onChange={(event) => setValue('payment_method', event.target.value)} value={values.payment_method || 'efectivo'}>
+            <option value="efectivo">Efectivo</option>
+            <option value="transferencia">Transferencia bancaria</option>
+            <option value="tarjeta">Tarjeta</option>
+            <option value="qik">Qik</option>
+            <option value="cheque">Cheque</option>
+            <option value="otro">Otro</option>
+          </Select>
+        ) : null}
         {!isInvoice ? <Input label="Válida hasta" onChange={(event) => setValue('valid_until', event.target.value || null)} type="date" value={values.valid_until || ''} /> : null}
         <label className="flex min-h-12 items-center gap-3 rounded-[10px] border border-mash-borderMd px-4 text-sm font-medium text-mash-text2 lg:mt-6 lg:min-h-10">
           <input checked={Boolean(values.tax_enabled)} className="h-4 w-4 accent-mash-brand" onChange={(event) => setValue('tax_enabled', event.target.checked)} type="checkbox" />
@@ -407,6 +417,7 @@ function defaultDocument(isInvoice, numberKey) {
     pickup_fee: 0,
     installation_fee: 0,
     amount_paid: 0,
+    payment_method: isInvoice ? 'efectivo' : null,
     required_deposit: 0,
     items: [blankItem()],
   };

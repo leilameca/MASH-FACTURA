@@ -8,7 +8,16 @@ import { registerPayment } from '../../services/financeService';
 import { getRow } from '../../services/crudService';
 import { generatePaymentReceiptPdf } from '../../services/pdfService.jsx';
 
-const methodOptions = paymentMethods.map((value) => ({ value, label: value }));
+const METHOD_LABELS = {
+  efectivo: 'Efectivo',
+  transferencia: 'Transferencia bancaria',
+  tarjeta: 'Tarjeta',
+  qik: 'Qik',
+  cheque: 'Cheque',
+  otro: 'Otro',
+};
+
+const methodOptions = paymentMethods.map((value) => ({ value, label: METHOD_LABELS[value] ?? value }));
 
 export function PaymentsPage() {
   const [toast, setToast] = useState(null);
@@ -51,7 +60,7 @@ export function PaymentsPage() {
         emptyTitle="Sin pagos registrados"
         fields={[
           { name: 'client_id', label: 'Cliente', type: 'lookup', lookupTable: 'clients', lookupLabel: 'full_name', lookupOrderBy: 'full_name', required: true },
-          { name: 'invoice_id', label: 'Factura', type: 'lookup', lookupTable: 'invoices', lookupLabel: 'invoice_number', lookupOrderBy: 'created_at', required: true },
+          { name: 'invoice_id', label: 'Factura', type: 'lookup', lookupTable: 'invoices', lookupLabel: 'invoice_number', lookupOrderBy: 'created_at', required: true, lookupFilter: (values, row) => !values.client_id || row.client_id === values.client_id },
           { name: 'amount', label: 'Monto', type: 'number', step: '0.01', required: true },
           { name: 'payment_method', label: 'Método de pago', type: 'select', options: methodOptions, required: true },
           { name: 'payment_date', label: 'Fecha de pago', type: 'date' },
@@ -59,7 +68,7 @@ export function PaymentsPage() {
           { name: 'notes', label: 'Notas', type: 'textarea', full: true },
         ]}
         filters={[{ name: 'payment_method', options: methodOptions }]}
-        getSubtitle={(row) => `${row.invoices?.invoice_number || 'Factura'} · ${row.payment_method}`}
+        getSubtitle={(row) => `${row.clients?.full_name || 'Pago'} · ${row.invoices?.invoice_number || 'Factura'} · ${METHOD_LABELS[row.payment_method] ?? row.payment_method}`}
         getTitle={(row) => `${row.clients?.full_name || 'Pago'} - ${row.amount}`}
         onCreate={registerPayment}
         rowActions={(row) => (

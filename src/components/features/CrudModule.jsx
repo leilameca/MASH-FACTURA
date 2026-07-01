@@ -267,10 +267,11 @@ export function CrudModule({
 function DynamicFormModal({ open, title, fields, values, loading, onSubmit, onClose }) {
   const [files, setFiles] = useState({});
   const [lookups, setLookups] = useState({});
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm({
     mode: 'onChange',
     reValidateMode: 'onChange',
   });
+  const watchedValues = watch();
 
   useEffect(() => {
     reset(values ?? {});
@@ -296,6 +297,23 @@ function DynamicFormModal({ open, title, fields, values, loading, onSubmit, onCl
     loadLookups().catch(() => setLookups({}));
   }, [fields, open]);
 
+  useEffect(() => {
+    const hasClient = fields.some((field) => field.name === 'client_id');
+    const hasInvoice = fields.some((field) => field.name === 'invoice_id');
+    if (!hasClient || !hasInvoice) return;
+
+    const invoices = lookups.invoice_id ?? [];
+    const selectedInvoice = invoices.find((row) => row.id === watchedValues.invoice_id);
+
+    if (selectedInvoice && selectedInvoice.client_id && watchedValues.client_id !== selectedInvoice.client_id) {
+      setValue('client_id', selectedInvoice.client_id);
+    }
+
+    if (watchedValues.client_id && watchedValues.invoice_id && selectedInvoice && selectedInvoice.client_id !== watchedValues.client_id) {
+      setValue('invoice_id', '');
+    }
+  }, [fields, lookups, watchedValues.client_id, watchedValues.invoice_id, setValue]);
+
   return (
     <Modal
       footer={(
@@ -318,6 +336,7 @@ function DynamicFormModal({ open, title, fields, values, loading, onSubmit, onCl
             lookupRows={lookups[field.name] ?? []}
             onFile={(file) => setFiles((current) => ({ ...current, [field.name]: file }))}
             register={register}
+            watchedValues={watchedValues}
           />
         ))}
       </form>
@@ -325,7 +344,7 @@ function DynamicFormModal({ open, title, fields, values, loading, onSubmit, onCl
   );
 }
 
-function FieldControl({ field, register, error, onFile, lookupRows }) {
+function FieldControl({ field, register, error, onFile, lookupRows, watchedValues }) {
   const rules = field.required ? { required: `${field.label} es requerido.` } : {};
   const className = field.full ? 'md:col-span-2' : '';
 
@@ -345,10 +364,11 @@ function FieldControl({ field, register, error, onFile, lookupRows }) {
   }
 
   if (field.type === 'lookup') {
+    const rows = field.lookupFilter ? lookupRows.filter((row) => field.lookupFilter(watchedValues, row)) : lookupRows;
     return (
       <Select className={className} error={error} label={field.label} {...register(field.name, rules)}>
         <option value="">{field.placeholder ?? 'Seleccionar'}</option>
-        {lookupRows.map((row) => (
+        {rows.map((row) => (
           <option key={row[field.lookupValue ?? 'id']} value={row[field.lookupValue ?? 'id']}>
             {field.lookupRender ? field.lookupRender(row) : row[field.lookupLabel]}
           </option>
